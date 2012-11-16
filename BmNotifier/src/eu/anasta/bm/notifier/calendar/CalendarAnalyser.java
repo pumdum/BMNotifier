@@ -6,9 +6,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import net.bluemind.core.api.calendar.Occurrence;
-
-import org.eclipse.swt.widgets.Display;
-
 import eu.anasta.bm.notifier.ui.Notification;
 
 public abstract class CalendarAnalyser extends TimerTask {
