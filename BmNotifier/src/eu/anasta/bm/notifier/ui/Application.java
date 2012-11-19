@@ -46,16 +46,19 @@ public class Application {
 	 */
 	public static void main(String args[]) {
 		try {
+			LOG.debug("start application");
 			final Application app = new Application();
-
 			app.init();
 			app.createTray();
-			app.connect();
+			if (app.trayicon==null){
+				return;
+			}
+			app.connect(true);
 			app.run();
 			app.destroyTray();
-
+			LOG.debug("close application");
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error(e);
 		}
 	}
 
@@ -91,10 +94,10 @@ public class Application {
 		Application.instance = this;
 	}
 
-	public void connect() {
+	public void connect(boolean autoConnect) {
 		disconnect();
 		connect = false;
-		while (!connect && param()) {
+		while (!connect && param(autoConnect)) {
 			user = login.getUser();
 			password = login.getPassword();
 			host = login.getHost();
@@ -145,9 +148,11 @@ public class Application {
 	}
 
 	private void createTray() {
+		LOG.debug("create tray icon");
 		imageBM = ImageCache.getImage(ImageCache.LITLLE_ERROR);
 		final Tray tray = display.getSystemTray();
 		if (tray == null) {
+			LOG.error("Tray not supported");
 		} else {
 			trayicon = new TrayItem(tray, SWT.NONE);
 			trayicon.setToolTipText("BM Notifier");
@@ -165,10 +170,20 @@ public class Application {
 			mi.setText("connect");
 			mi.addListener(SWT.Selection, new Listener() {
 				public void handleEvent(Event event) {
-					connect();
+					connect(false);
 				}
 
 			});
+			mi = new MenuItem(menu, SWT.PUSH);
+			mi.setText("disconect");
+			mi.addListener(SWT.Selection, new Listener() {
+				public void handleEvent(Event event) {
+					disconnect();
+					disableSession();
+				}
+
+			});
+
 
 			trayicon.addListener(SWT.MenuDetect, new Listener() {
 				public void handleEvent(Event event) {
@@ -183,6 +198,7 @@ public class Application {
 
 	private void destroyTray() {
 		// stop calendar
+		LOG.debug("detroy tray");
 		disconnect();
 		imageBM.dispose();
 		display.dispose();
@@ -192,12 +208,13 @@ public class Application {
 	}
 
 	private void disconnect() {
+		LOG.debug("close connection");
 		if (mailManager != null)
 			mailManager.disconnectAccounts();
 		if (calendar != null)
 			calendar.stopPlanner();
 		Notification.getInstance().trayChange(
-				TRAY_TYPE.ERROR);
+				TRAY_TYPE.DISCONNECTED);
 		System.out.println("disconnected");
 	}
 	private void ennableSession(){
@@ -213,14 +230,24 @@ public class Application {
 	}
 
 	public void init() {
+		try{
+		LOG.debug("init application");
+		LOG.debug("new display");
 		display = new Display();
+		LOG.debug("new shell");
 		masterShell = new Shell(display);
+		LOG.debug("build login");
 		login = new Login(masterShell);
 		login.setUser(prefs.get(USER, ""));
 		login.setPassword(prefs.get(PASSWORD, ""));
 		login.setHost(prefs.get(HOST, ""));
 		login.setPort(prefs.get(PORT, "143"));
+		LOG.debug("build notification event");
 		windowEventNotif = new EventNotification();
+		LOG.debug("end init application");
+		}catch (Exception e ){
+			LOG.error(e);
+		}
 
 	}
 
@@ -228,10 +255,14 @@ public class Application {
 		return prefs.getBoolean(VALID, false);
 	}
 
-	private boolean param() {
+	private boolean param(boolean autoConnect) {
 		int reponse = Window.OK;
-		if (!prefs.getBoolean(VALID, false))
-			reponse = login.open();
+		if (!prefs.getBoolean(VALID, false) ){
+			if (autoConnect)
+				reponse =Window.CANCEL;
+			else
+				reponse = login.open();
+		}
 		return reponse == Window.OK;
 	}
 
@@ -256,8 +287,6 @@ public class Application {
 
 			@Override
 			public void onModelChange() {
-				// TODO do something
-
 				LOG.debug("modéle change");
 			}
 

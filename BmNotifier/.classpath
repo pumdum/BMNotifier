@@ -2,27 +2,31 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JDK6"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.osgi_3.8.0.v20120529-1548.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.osgi_3.8.0.v20120529-1548.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.core.commands_3.6.1.v20120521-2329.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.core.commands_3.6.1.v20120521-2329.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.equinox.common_3.6.100.v20120522-1841.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.equinox.common_3.6.100.v20120522-1841.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.equinox.registry_3.5.200.v20120522-1841.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.equinox.registry_3.5.200.v20120522-1841.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.core.runtime_3.8.0.v20120521-2346.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.core.runtime_3.8.0.v20120521-2346.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.text_3.5.200.v20120523-1310.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.text_3.5.200.v20120523-1310.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.swt.win32.win32.x86_64_3.100.0.v4233d.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.swt.win32.win32.x86_64_3.100.0.v4233d.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.jface_3.8.0.v20120521-2329.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.jface_3.8.0.v20120521-2329.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.jface.text_3.8.0.v20120531-0600.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.jface.text_3.8.0.v20120531-0600.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.ui.workbench_3.103.0.v20120530-1824.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.ui.workbench_3.103.0.v20120530-1824.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/com.ibm.icu_4.4.2.v20110823.jar" sourcepath="C:/Program Files/eclipse/plugins/com.ibm.icu_4.4.2.v20110823.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.ui.forms_3.5.200.v20120521-2329.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.ui.forms_3.5.200.v20120521-2329.jar"/>
-	<classpathentry kind="lib" path="C:/Lib/opal-0.9.5.jar"/>
-	<classpathentry kind="lib" path="lib/sound.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-math3.jar"/>
 	<classpathentry kind="lib" path="lib/images.jar"/>
-	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
-	<classpathentry kind="lib" path="lib/commons-math3-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.jboss.ide.eclipse.as.core.server.runtime.runtimeTarget/JBoss 7.1 Runtime"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/bm"/>
+	<classpathentry kind="lib" path="lib/jface.jar"/>
+	<classpathentry kind="lib" path="lib/jface.text.jar"/>
+	<classpathentry kind="lib" path="lib/log4j.jar"/>
+	<classpathentry kind="lib" path="lib/nebula.cdatetime.jar"/>
+	<classpathentry kind="lib" path="lib/nebula.pshelf.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.core.commands.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.equinox.common.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.osgi.jar"/>
+	<classpathentry kind="lib" path="lib/sound.jar"/>
+	<classpathentry kind="lib" path="lib/swt.jar"/>
+	<classpathentry kind="lib" path="lib/mail.jar"/>
 	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.nebula.widgets.pshelf.source_1.0.0.201211091457.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Nebula"/>
+	<classpathentry kind="lib" path="lib/async-http-client-1.7.4.jar"/>
+	<classpathentry kind="lib" path="lib/jcl-over-slf4j-1.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/logback-classic-1.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/logback-core-1.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/net.bluemind.core.client_1.0.0.b5930.jar"/>
+	<classpathentry kind="lib" path="lib/net.bluemind.core.common_1.0.0.b5930.jar"/>
+	<classpathentry kind="lib" path="lib/net.bluemind.locator.client_2.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/netty-3.4.6.Final.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/nebula.widgets.cdatetime.jar"/>
+	<classpathentry kind="lib" path="lib/nebula.cwt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

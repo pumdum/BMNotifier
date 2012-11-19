@@ -4,7 +4,6 @@ import java.util.Date;
 
 import net.bluemind.core.api.calendar.Occurrence;
 
-import org.eclipse.jface.action.StatusLineManager;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
