@@ -60,15 +60,6 @@ public abstract class CalendarAnalyser extends TimerTask {
 		@Override
 		public void run() {
 			Notification.getInstance().eventNotification(occurence);
-//			Display.getDefault().asyncExec(new Runnable() {
-//
-//				@Override
-//				public void run() {
-//					// windowEventNotif.open();
-//					// windowEventNotif.addOccurence(occurence);
-//					// windowEventNotif.refresh();
-//				}
-//			});
 		}
 
 	}

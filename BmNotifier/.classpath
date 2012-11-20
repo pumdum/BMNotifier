@@ -16,7 +16,6 @@
 	<classpathentry kind="lib" path="lib/sound.jar"/>
 	<classpathentry kind="lib" path="lib/swt.jar"/>
 	<classpathentry kind="lib" path="lib/mail.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.nebula.widgets.pshelf.source_1.0.0.201211091457.jar"/>
 	<classpathentry kind="lib" path="lib/async-http-client-1.7.4.jar"/>
 	<classpathentry kind="lib" path="lib/jcl-over-slf4j-1.6.4.jar"/>
 	<classpathentry kind="lib" path="lib/logback-classic-1.0.0.jar"/>

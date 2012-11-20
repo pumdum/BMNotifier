@@ -26,14 +26,15 @@ import eu.anasta.bm.notifier.ui.cache.ImageCache;
 
 public class Application {
 
-	private static final String HOST = "host";
 	private static Application instance;
-	private static final Logger LOG = Logger.getLogger(Application.class);
-	private static final String PASSWORD = "password";
-	private static final String PORT = "port";
 
-	private static final String USER = "user";
-	private static final String VALID = "validParam";
+	private static final String PREF_USER = "user";
+	private static final String PREF_PASSWORD = "password";
+	private static final String PREF_HOST = "host";
+	private static final String PREF_PORT = "port";
+	private static final String PREF_VALID = "validParam";
+
+	private static final Logger LOG = Logger.getLogger(Application.class);
 
 	public static Application getInstance() {
 		return instance;
@@ -50,9 +51,6 @@ public class Application {
 			final Application app = new Application();
 			app.init();
 			app.createTray();
-			if (app.trayicon==null){
-				return;
-			}
 			app.connect(true);
 			app.run();
 			app.destroyTray();
@@ -62,29 +60,17 @@ public class Application {
 		}
 	}
 
-	private CalendarManager calendar;
-	private boolean connect;
-	private Display display;
-
-	private String host;
-
-	private Image imageBM;
-	private Login login;
-	private JavaPushMailAccountsManager mailManager;
-
-	public Shell masterShell;
-
-	private String password;
-	private int port;
 	private final Preferences prefs = Preferences
 			.userNodeForPackage(Application.class);
 
+	private JavaPushMailAccountsManager mailManager;
+	private CalendarManager calendar;
+
+	private Shell masterShell;
+	private Display display;
+	private Login login;
 	private TrayItem trayicon;
-
-	private String user;
-
 	private EventNotification windowEventNotif;
-
 
 	public EventNotification getWindowEventNotif() {
 		return windowEventNotif;
@@ -94,65 +80,13 @@ public class Application {
 		Application.instance = this;
 	}
 
-	public void connect(boolean autoConnect) {
-		disconnect();
-		connect = false;
-		while (!connect && param(autoConnect)) {
-			user = login.getUser();
-			password = login.getPassword();
-			host = login.getHost();
-			if (!NumberUtils.isNumber(login.getPort())) {
-				disableSession();
-				MessageDialog.openError(masterShell, "Erreur",
-						"port imap incorecte ");
-				continue;
-			} else {
-				port = NumberUtils.createInteger(login.getPort());
-			}
-			// open calendar connect = openWebservice(user, password, host);
-			calendar = new CalendarManager(user, password, host) {
-
-				@Override
-				protected void onAuthFail() {
-					disableSession();
-					disconnect();
-					
-
-				}
-
-				@Override
-				protected void onDisconnect() {
-					if (isSessionEnnable()){
-					Notification.getInstance().trayChange(
-							TRAY_TYPE.DISCONNECTED);
-					}else{
-						Notification.getInstance().trayChange(
-								TRAY_TYPE.ERROR);
-						
-					}
-
-				}
-			};
-			connect = calendar.startPlanner();
-			// connect =true;
-			Notification.getInstance().trayChange(TRAY_TYPE.CONNECTED);
-			scanMail(user, password, host, port);
-			// start calendar planNextreminder();
-			prefs.put(USER, user);
-			prefs.put(PASSWORD, login.getPassword());
-			prefs.put(HOST, login.getHost());
-			prefs.put(PORT, login.getPort());
-			ennableSession();
-		}
-
-	}
-
-	private void createTray() {
+	private void createTray() throws Exception {
 		LOG.debug("create tray icon");
-		imageBM = ImageCache.getImage(ImageCache.LITLLE_ERROR);
+		Image imageBM = ImageCache.getImage(ImageCache.LITLLE_ERROR);
 		final Tray tray = display.getSystemTray();
 		if (tray == null) {
 			LOG.error("Tray not supported");
+			throw new Exception("System tray not suported");
 		} else {
 			trayicon = new TrayItem(tray, SWT.NONE);
 			trayicon.setToolTipText("BM Notifier");
@@ -184,43 +118,110 @@ public class Application {
 
 			});
 
-
 			trayicon.addListener(SWT.MenuDetect, new Listener() {
 				public void handleEvent(Event event) {
 					menu.setVisible(true);
 				}
 			});
 			trayicon.setImage(imageBM);
-//			trayicon.add
+		}
+
+	}
+
+	public void connect(boolean autoConnect) {
+		// Not allow multiple connection -> try disconnect before;
+		disconnect();
+		String user;
+		String password;
+		String host;
+		int port;
+		boolean connect = false;
+		// while not connected show login form unless autoconnect
+		while (!connect && param(autoConnect)) {
+			user = login.getUser();
+			password = login.getPassword();
+			host = login.getHost();
+			if (!NumberUtils.isNumber(login.getPort())) {
+				// not numeric port -> error and continue
+				disableSession();
+				MessageDialog.openError(masterShell, "Erreur",
+						"port imap incorecte ");
+				continue;
+			} else {
+				port = NumberUtils.createInteger(login.getPort());
+			}
+			// accés webservice.
+			calendar = new CalendarManager(user, password, host) {
+
+				@Override
+				protected void onAuthFail() {
+					disableSession();
+					disconnect();
+
+				}
+
+				@Override
+				protected void onDisconnect() {
+					if (isSessionEnnable()) {
+						Notification.getInstance().trayChange(
+								TRAY_TYPE.DISCONNECTED);
+					} else {
+						Notification.getInstance().trayChange(TRAY_TYPE.ERROR);
+
+					}
+
+				}
+			};
+			//ouverture du wenservice;
+			connect = calendar.startPlanner();
+			if (connect) {
+				// start mail push
+				scanMail(user, password, host, port);
+				// save preference
+				prefs.put(PREF_USER, user);
+				prefs.put(PREF_PASSWORD, login.getPassword());
+				prefs.put(PREF_HOST, login.getHost());
+				prefs.put(PREF_PORT, login.getPort());
+				ennableSession();
+				Notification.getInstance().trayChange(TRAY_TYPE.CONNECTED);
+			} else {
+				disableSession();
+				MessageDialog.openError(masterShell, "Erreur",
+						"Imposible to connect; Check user password ");
+				if (autoConnect)
+					break;
+			}
 		}
 
 	}
 
 	private void destroyTray() {
-		// stop calendar
+		// disconnect and dispose()
 		LOG.debug("detroy tray");
 		disconnect();
-		imageBM.dispose();
+		ImageCache.dispose();
 		display.dispose();
 	}
-	private void disableSession(){
-		prefs.putBoolean(VALID, false);
+
+	private void disableSession() {
+		//set flag of session state to invalid 
+		prefs.putBoolean(PREF_VALID, false);
 	}
 
 	private void disconnect() {
 		LOG.debug("close connection");
+		//disconnect service if possible
 		if (mailManager != null)
 			mailManager.disconnectAccounts();
 		if (calendar != null)
 			calendar.stopPlanner();
-		Notification.getInstance().trayChange(
-				TRAY_TYPE.DISCONNECTED);
-		System.out.println("disconnected");
+		Notification.getInstance().trayChange(TRAY_TYPE.DISCONNECTED);
 	}
-	private void ennableSession(){
-		prefs.putBoolean(VALID, true);
+
+	private void ennableSession() {
+		prefs.putBoolean(PREF_VALID, true);
 	}
-	
+
 	public JavaPushMailAccountsManager getMailManager() {
 		return mailManager;
 	}
@@ -230,36 +231,36 @@ public class Application {
 	}
 
 	public void init() {
-		try{
-		LOG.debug("init application");
-		LOG.debug("new display");
-		display = new Display();
-		LOG.debug("new shell");
-		masterShell = new Shell(display);
-		LOG.debug("build login");
-		login = new Login(masterShell);
-		login.setUser(prefs.get(USER, ""));
-		login.setPassword(prefs.get(PASSWORD, ""));
-		login.setHost(prefs.get(HOST, ""));
-		login.setPort(prefs.get(PORT, "143"));
-		LOG.debug("build notification event");
-		windowEventNotif = new EventNotification();
-		LOG.debug("end init application");
-		}catch (Exception e ){
+		try {
+			LOG.debug("init application");
+			LOG.debug("new display");
+			display = new Display();
+			LOG.debug("new shell");
+			masterShell = new Shell(display);
+			LOG.debug("build login");
+			login = new Login(masterShell);
+			login.setUser(prefs.get(PREF_USER, ""));
+			login.setPassword(prefs.get(PREF_PASSWORD, ""));
+			login.setHost(prefs.get(PREF_HOST, ""));
+			login.setPort(prefs.get(PREF_PORT, "143"));
+			LOG.debug("build notification event");
+			windowEventNotif = new EventNotification();
+			LOG.debug("end init application");
+		} catch (Exception e) {
 			LOG.error(e);
 		}
 
 	}
 
-	private boolean isSessionEnnable(){
-		return prefs.getBoolean(VALID, false);
+	private boolean isSessionEnnable() {
+		return prefs.getBoolean(PREF_VALID, false);
 	}
 
 	private boolean param(boolean autoConnect) {
 		int reponse = Window.OK;
-		if (!prefs.getBoolean(VALID, false) ){
+		if (!prefs.getBoolean(PREF_VALID, false)) {
 			if (autoConnect)
-				reponse =Window.CANCEL;
+				reponse = Window.CANCEL;
 			else
 				reponse = login.open();
 		}
@@ -297,7 +298,6 @@ public class Application {
 				} else {
 					Notification.getInstance().trayChange(
 							TRAY_TYPE.DISCONNECTED);
-
 				}
 			}
 		};
