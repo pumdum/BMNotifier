@@ -1,6 +1,5 @@
 
 
-
 BMNotifier
 ==========
 
@@ -12,3 +11,11 @@ Thanks to him for help.
 
 
 Visual notification => http://hexapixel.com/2009/06/30/creating-a-notification-popup-widget
+
+
+also uses
+BM-API
+JFACE
+Nebula
+Common apache
+...
