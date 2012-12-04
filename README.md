@@ -1,5 +1,4 @@
 
-
 BMNotifier
 ==========
 
@@ -19,3 +18,6 @@ JFACE
 Nebula
 Common apache
 ...
+
+ScreenShot + excetuable jar
+https://docs.google.com/folder/d/0B9f28UKXkypSdGlhUlNzektUZDA/edit
