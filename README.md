@@ -1,4 +1,3 @@
-
 BMNotifier
 ==========
 
@@ -19,5 +18,5 @@ Nebula
 Common apache
 ...
 
-ScreenShot + excetuable jar
+ScreenShot + runnable jar (tested on win7 64 + java 6)
 https://docs.google.com/folder/d/0B9f28UKXkypSdGlhUlNzektUZDA/edit
