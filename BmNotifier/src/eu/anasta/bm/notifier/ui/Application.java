@@ -123,6 +123,13 @@ public class Application {
 					menu.setVisible(true);
 				}
 			});
+			trayicon.addListener(SWT.DefaultSelection , new Listener() {
+				public void handleEvent(Event event) {
+					if (isSessionEnnable()){
+						org.eclipse.swt.program.Program.launch("http://"+prefs.get(PREF_HOST, ""));
+					}
+				}
+			});
 			trayicon.setImage(imageBM);
 		}
 
