@@ -5,13 +5,15 @@ import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.log4j.Logger;
+
 /**
  *
  * @author Mo Firouz
  * @since 16/10/11
  */
 public abstract class NetworkProber {
-
+	private static final Logger LOG = Logger.getLogger(NetworkProber.class);
     private final static int SLEEP_TIME = 5000; // wait 5secs between each probe
     private JavaPushMailAccount mail;
     private String host;
@@ -45,6 +47,7 @@ public abstract class NetworkProber {
             status = true;
             pingFailureCount = 0;
         } catch (Exception ex) {
+        	LOG.error(ex);
             status = false;
             pingFailureCount++;
         } finally {
@@ -52,6 +55,7 @@ public abstract class NetworkProber {
                 try {
                     socket.close();
                 } catch (Exception e) {
+                	LOG.error(e);
                 }
             }
         }
@@ -80,8 +84,15 @@ public abstract class NetworkProber {
             public void run() {
                 if (lastBeat != -1) {
                     long currentTime = System.currentTimeMillis();
-                    if (currentTime - lastBeat > (SLEEP_TIME + 100)) { // missed beat, probably because of sleep...
-                        lastBeat = currentTime;    
+                    if (currentTime - lastBeat > ((SLEEP_TIME*2)-1)) { 
+                    	// missed beat, probably because of sleep...
+                        LOG.info("missed beat ... ? your sleep ? ");
+                        LOG.debug("current time : "+currentTime);
+                        LOG.debug("previous beat : "+lastBeat);
+                        LOG.debug("difference : "+(currentTime-lastBeat));
+                        LOG.debug("marge d'erreur: "+(SLEEP_TIME + 10));
+                        LOG.debug("resultat du test "+(currentTime - lastBeat > (SLEEP_TIME + 10)));
+                        lastBeat = currentTime;   
                         missedBeat();
                         return;
                     } 
@@ -122,6 +133,7 @@ public abstract class NetworkProber {
         timer.cancel();
         timer.purge();
         timer = null;
+        
     }
 
     public int getPingFailureCount() {

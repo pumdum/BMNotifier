@@ -2,6 +2,8 @@ package eu.anasta.bm.notifier.ui;
 
 import java.util.prefs.Preferences;
 
+import javax.mail.AuthenticationFailedException;
+
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -18,6 +20,7 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 
 import eu.anasta.bm.notifier.calendar.CalendarManager;
+import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.mail.UnreadMailState;
 import eu.anasta.bm.notifier.mail.app.JavaPushMailAccountsManager;
@@ -72,6 +75,7 @@ public class Application {
 	private TrayItem trayicon;
 	private EventNotification windowEventNotif;
 
+
 	public EventNotification getWindowEventNotif() {
 		return windowEventNotif;
 	}
@@ -123,13 +127,22 @@ public class Application {
 					menu.setVisible(true);
 				}
 			});
+			trayicon.addListener(SWT.DefaultSelection, new Listener() {
+				public void handleEvent(Event event) {
+					if (isSessionEnnable()) {
+						org.eclipse.swt.program.Program.launch("http://"
+								+ prefs.get(PREF_HOST, "") + "?BMHPS="
+								+ ClientFormLogin.getInstance().login());
+					}
+				}
+			});
 			trayicon.setImage(imageBM);
 		}
 
 	}
 
 	public void connect(boolean autoConnect) {
-		// Not allow multiple connection -> try disconnect before;
+		LOG.debug("Not allow multiple connection -> try disconnect before;");
 		disconnect();
 		String user;
 		String password;
@@ -154,7 +167,7 @@ public class Application {
 			calendar = new CalendarManager(user, password, host) {
 
 				@Override
-				protected void onAuthFail() {
+				protected void onAuthFail(Exception e) {
 					disableSession();
 					disconnect();
 
@@ -172,8 +185,9 @@ public class Application {
 
 				}
 			};
-			//ouverture du wenservice;
+			// ouverture du webservice;
 			connect = calendar.startPlanner();
+			ClientFormLogin.getInstance().init(host, user, password);
 			if (connect) {
 				// start mail push
 				scanMail(user, password, host, port);
@@ -204,13 +218,13 @@ public class Application {
 	}
 
 	private void disableSession() {
-		//set flag of session state to invalid 
+		// set flag of session state to invalid
 		prefs.putBoolean(PREF_VALID, false);
 	}
 
 	private void disconnect() {
 		LOG.debug("close connection");
-		//disconnect service if possible
+		// disconnect service if possible
 		if (mailManager != null)
 			mailManager.disconnectAccounts();
 		if (calendar != null)
@@ -281,14 +295,19 @@ public class Application {
 
 			@Override
 			public void handleError(JavaPushMailAccount acc, Exception ex) {
-				ex.printStackTrace();
-				disconnect();
+				LOG.error("[ERROR] on mail manager -> disconnect ", ex);
+				if (ex instanceof AuthenticationFailedException) {
+					disconnect();
+					disableSession();
+					MessageDialog.openError(masterShell, "Erreur",
+							"Imposible to connect; Check user password ");
+				}
 
 			}
 
 			@Override
 			public void onModelChange() {
-				LOG.debug("modéle change");
+				LOG.info("modéle change");
 			}
 
 			@Override

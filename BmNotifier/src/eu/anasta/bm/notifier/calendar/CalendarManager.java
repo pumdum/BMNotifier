@@ -47,6 +47,10 @@ public abstract class CalendarManager {
 		String url = "https://" + host + "/services";
 		this.cal = cl.locate(url);
 		token = cal.login(user, password, "BM Notifier");
+		// start session
+		System.out.println(token.getSessionId());
+		System.out.println(token.getAuthService());
+		System.out.println(token.getUserId());
 		return (token != null && token.getSessionId() != null);
 	}
 
@@ -55,8 +59,10 @@ public abstract class CalendarManager {
 		Calendar now = Calendar.getInstance();
 		Calendar future = Calendar.getInstance();
 		future.add(Calendar.DAY_OF_YEAR, MAXDAYRECALL);
-		//determine que la prochaine recherche aura a l'instant T + temps entre chaque recherche (10min) + une marge d'ecart en cas de synchro entre serveur et client (ici 3 minute)
-		//TODO prevoir un fichier de paramétre 
+		// determine que la prochaine recherche aura a l'instant T + temps entre
+		// chaque recherche (10min) + une marge d'ecart en cas de synchro entre
+		// serveur et client (ici 3 minute)
+		// TODO prevoir un fichier de paramétre
 		Long nextSearch = now.getTimeInMillis() + ELAPSETIMEBETEEWNSEARCH
 				+ MARGETIMESYNCRO;
 		CalendarQuery cq = new CalendarQuery();
@@ -67,9 +73,10 @@ public abstract class CalendarManager {
 			net.bluemind.core.api.calendar.Event e = oc.getEvent();
 			if (e.getAlert() == null)
 				continue;
-			// heure a la quelle à la quelle l'alert doit être donnée  
+			// heure a la quelle à la quelle l'alert doit être donnée
 			Long alertAt = oc.getBegin() - 1000 * e.getAlert();
-			// si l'alert a lieux entre mtn et la prochaine recherche on l'ajoute a la liste des rapelle de notre recherche
+			// si l'alert a lieux entre mtn et la prochaine recherche on
+			// l'ajoute a la liste des rapelle de notre recherche
 			if (alertAt <= nextSearch && alertAt > now.getTimeInMillis()) {
 				listRecall.add(oc);
 			}
@@ -88,7 +95,7 @@ public abstract class CalendarManager {
 			@Override
 			protected void onException(Exception e) {
 				if (e instanceof AuthFault) {
-					onAuthFail();
+					onAuthFail(e);
 					return;
 				} else if (e instanceof ServerFault) {
 					if (failSearch > 3) {
@@ -112,7 +119,7 @@ public abstract class CalendarManager {
 
 	protected abstract void onDisconnect();
 
-	protected abstract void onAuthFail();
+	protected abstract void onAuthFail(Exception e);
 
 	public void stopPlanner() {
 		if (plannerNextReminder == null)

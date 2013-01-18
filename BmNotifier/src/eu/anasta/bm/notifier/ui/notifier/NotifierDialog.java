@@ -184,7 +184,6 @@ public class NotifierDialog {
 			public void widgetSelected(SelectionEvent event) {
 				// TODO Auto-generated method stub
 				org.eclipse.swt.program.Program.launch(event.text);
-				//TODO LOGEUR DEBUG			System.out.println("Selection: " + event.text);
 				
 			}
 			
