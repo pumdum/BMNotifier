@@ -8,6 +8,7 @@ import net.bluemind.core.api.calendar.Occurrence;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
+import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.ui.cache.ImageCache;
 import eu.anasta.bm.notifier.ui.notifier.NotificationType;
@@ -33,7 +34,7 @@ public class Notification {
 	private String buildOpenMailUrl(String host, String uid, String folder){
 		return " <a href=\"https://"
 				+ host
-				+ "/webmail/?_task=mail&_action=show&_uid="
+				+ "/webmail/?BMHPS="+ClientFormLogin.getInstance().login()+"&_task=mail&_action=show&_uid="
 				+ uid
 				+ "&_mbox="+folder+"\">open</a>";
 	}

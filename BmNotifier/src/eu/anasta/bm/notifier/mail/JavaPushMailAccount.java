@@ -18,6 +18,8 @@ import javax.mail.event.MessageCountEvent;
 import javax.mail.event.MessageCountListener;
 import javax.mail.search.FlagTerm;
 
+import org.apache.log4j.Logger;
+
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 
@@ -32,7 +34,6 @@ public abstract class JavaPushMailAccount implements Runnable {
 	public final static int READ_WRITE_FOLDER = Folder.READ_WRITE;
 	private static final long STOPPUSHTIMER = 29 * 60 * 1000;
 	private boolean connected = false;
-	private boolean usePush = true;
 	private String accountName;
 	private String serverAddress;
 	private String username;
@@ -43,6 +44,8 @@ public abstract class JavaPushMailAccount implements Runnable {
 	private Session session;
 	private IMAPFolder folder;
 	private Timer timer;
+	private static final Logger LOG = Logger
+			.getLogger(JavaPushMailAccount.class);
 
 	public IMAPFolder getFolder() {
 		return folder;
@@ -56,11 +59,11 @@ public abstract class JavaPushMailAccount implements Runnable {
 	private MessageChangedListener messageChangedListener,
 			externalChangedListener;
 	private NetworkProber prober;
-	private MailPoller poller;
 	private Thread pushThread;
 
 	public JavaPushMailAccount(String accountName, String serverAddress,
 			int serverPort, boolean useSSL) {
+		LOG.debug("build mail account");
 		this.accountName = accountName;
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
@@ -86,7 +89,7 @@ public abstract class JavaPushMailAccount implements Runnable {
 		} catch (AuthenticationFailedException ex) {
 			ex.printStackTrace();
 			connected = false;
-			// TODO log 
+			LOG.error("authentification failre", ex);
 			onError(ex);
 		} catch (MessagingException ex) {
 			ex.printStackTrace();
@@ -94,11 +97,11 @@ public abstract class JavaPushMailAccount implements Runnable {
 			folder = null;
 			messageChangedListener = null;
 			messageCountListener = null;
-			// TODO log 
+			LOG.error(ex);
 			onError(ex);
 		} catch (IllegalStateException ex) {
 			ex.printStackTrace();
-			// TODO log 
+			LOG.error(ex);
 			connected = true;
 			onConnect();
 		}
@@ -115,10 +118,10 @@ public abstract class JavaPushMailAccount implements Runnable {
 					closeFolder();
 					server.close();
 					prober.stop();
-					poller.stop();
 					connected = false;
 					onDisconnect();
 				} catch (Exception e) {
+					LOG.error(e);
 					onError(e);
 				}
 			}
@@ -148,6 +151,7 @@ public abstract class JavaPushMailAccount implements Runnable {
 											// something has truly changed!
 					if (status && !connected) { // if connection up, but not
 												// connected...
+						LOG.info("status seem be ok but connection down try to connect");
 						connect();
 					} else if (!status && connected) { // if previously
 														// connected, but link
@@ -155,24 +159,28 @@ public abstract class JavaPushMailAccount implements Runnable {
 														// disconnect...
 						if (getSessionFailureCount() >= 2
 								|| getPingFailureCount() >= 2) {
+							LOG.info("msut be connction vut seem be off");
 							connected = false;
-							if (!usePush)
-								poller.stop();
-
 							onDisconnect();
 							connect();
 						}
 					}
 				} else { // if link (either session or net connection) and
 							// connection down, something gone wrong...
-					if (!isSessionValid() && getNetConnectivity()) // need to
-																	// make sure
-																	// that
-																	// session
-																	// is down,
-																	// but link
-																	// is up...
+					if (!isSessionValid() && getNetConnectivity()) { // need to
+																		// make
+																		// sure
+																		// that
+																		// session
+																		// is
+																		// down,
+																		// but
+																		// link
+																		// is
+																		// up...
+						LOG.info("connection off try reconnect");
 						connect();
+					}
 				}
 			}
 
@@ -180,28 +188,6 @@ public abstract class JavaPushMailAccount implements Runnable {
 			public void missedBeat() { // missed beat, because of going to
 										// sleep, probably?!
 				connected = false;
-			}
-		};
-
-		poller = new MailPoller(folder) {
-
-			@Override
-			public void onNewMessage() {
-				try {
-					if (externalCountListener != null) {
-						externalCountListener
-								.messagesAdded(new MessageCountEvent(folder,
-										MessageCountEvent.ADDED, false,
-										getUnreadMessages()));
-						messageCountListener
-								.messagesAdded(new MessageCountEvent(folder,
-										MessageCountEvent.ADDED, false,
-										getUnreadMessages()));
-					}
-				} catch (Exception e) {
-					onError(e);
-				}
-
 			}
 		};
 
@@ -223,14 +209,14 @@ public abstract class JavaPushMailAccount implements Runnable {
 			server = (IMAPStore) session.getStore(imapProtocol);
 			connect();
 		} catch (MessagingException ex) {
-			ex.printStackTrace();
-			// TODO log SimpleLogger.debug(ex);
+			LOG.error(ex);
 			onError(ex);
 		}
 	}
 
 	private void selectFolder(String folderName) {
 		try {
+			LOG.debug("select folder " + folderName);
 			closeFolder();
 			if (folderName.equalsIgnoreCase("")) {
 				folder = (IMAPFolder) server.getFolder("INBOX");
@@ -239,16 +225,15 @@ public abstract class JavaPushMailAccount implements Runnable {
 			}
 			openFolder();
 		} catch (MessagingException ex) {
-			ex.printStackTrace();
-			//TODO  log
+			LOG.error(ex);
 			onError(ex);
 		} catch (IllegalStateException ex) {
-			ex.printStackTrace();
-			//TODO  log 
+			LOG.error(ex);
 		}
 	}
 
 	private void openFolder() throws MessagingException {
+		LOG.debug("open folder");
 		if (folder == null)
 			return;
 
@@ -256,39 +241,38 @@ public abstract class JavaPushMailAccount implements Runnable {
 		folder.setSubscribed(true);
 		removeAllListenersFromFolder();
 		addAllListenersFromFolder();
-		poller.setFolder(folder);
-		if (usePush){
-			usePush();
-			TimerTask task = new TimerTask() {
+		LOG.debug("use push");
+		stopPeriodiquePush();
+		TimerTask task = new TimerTask() {
 
-				@Override
-				public void run() {
-					usePush();
-				}
-			};
-			stopPeriodiquePush();
-			timer = new Timer("Pushperiodique-" + accountName, true);
-			timer.scheduleAtFixedRate(task, STOPPUSHTIMER,STOPPUSHTIMER);
-		}
-		else
-			poller.start(accountName);
+			@Override
+			public void run() {
+				usePush();
+			}
+		};
+		LOG.debug("start periodic renew push");
+		timer = new Timer("Pushperiodique-" + accountName, true);
+		timer.scheduleAtFixedRate(task, 0, STOPPUSHTIMER);
 	}
 
 	private void closeFolder() throws MessagingException {
+		LOG.debug("close folder");
 		if (folder == null || !folder.isOpen())
 			return;
 
 		stopPeriodiquePush();
 		removeAllListenersFromFolder();
-		folder.setSubscribed(false);
+		// folder.setSubscribed(false);
+		if (folder == null || !folder.isOpen())
+			return;
 		folder.close(false);
 		folder = null;
-		messageChangedListener=null;
-		messageCountListener=null;
+		messageChangedListener = null;
+		messageCountListener = null;
 	}
 
 	private void usePush() {
-		if (folder == null || !usePush) {
+		if (folder == null) {
 			return;
 
 		}
@@ -297,36 +281,41 @@ public abstract class JavaPushMailAccount implements Runnable {
 
 			public void run() {
 				try {
+					LOG.debug("start use push");
 					UnreadMailState.check();
 					folder.idle(false);
-					//TODO log ex
+					// TODO log ex
 				} catch (FolderClosedException e) {
-					e.printStackTrace();
+					LOG.error(e);
 					messageChangedListener = null;
 					messageCountListener = null;
-					usePush = true;
-					selectFolder("");
+					if (prober.getNetConnectivity()) {
+						selectFolder("");
+					}
 				} catch (javax.mail.StoreClosedException e) {
-					e.printStackTrace();
-					usePush = true;
+					LOG.error(e);
 				} catch (MessagingException e) {
-					e.printStackTrace();
-					usePush = false;
+					LOG.error(e);
 					selectFolder("");
 				} catch (Exception e) {
-					e.printStackTrace();
-					usePush = false;
+					LOG.error(e);
 					selectFolder("");
 				}
 			}
 		};
 		pushThread = new Thread(r, "Push-" + accountName);
 		pushThread.setDaemon(true);
+		
 		pushThread.start();
 
 	}
 
 	public void stopPeriodiquePush() {
+		LOG.debug("stop periodic renew push");
+//		for (StackTraceElement trac : Thread.currentThread().getStackTrace()){
+//			LOG.debug(trac.toString());
+//			
+//		}
 		if (timer == null)
 			return;
 
@@ -336,11 +325,13 @@ public abstract class JavaPushMailAccount implements Runnable {
 	}
 
 	private void removeAllListenersFromFolder() {
+		LOG.debug("remove listener");
 		removeListener(externalChangedListener);
 		removeListener(externalCountListener);
 	}
 
 	private void removeListener(EventListener listener) {
+
 		if (listener == null || folder == null) {
 			return;
 		}
@@ -355,6 +346,7 @@ public abstract class JavaPushMailAccount implements Runnable {
 	}
 
 	private void addAllListenersFromFolder() {
+		LOG.debug("add listener");
 		addListener(externalCountListener);
 		addListener(externalChangedListener);
 	}

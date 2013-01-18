@@ -25,12 +25,10 @@ public abstract class CalendarAnalyser extends TimerTask {
 		List<Occurrence> ocs;
 		try {
 			ocs = cal.findNextRecallEvent();
-			System.out.println("find and schedul next reminder");
 			for (Occurrence oc : ocs) {
 				NotifyTask task = new NotifyTask(oc);
 				Date schedul = new Date(oc.getBegin()
 						- (oc.getEvent().getAlert() * 1000));
-				System.out.println("scheldult event at " + schedul);
 				notifyReminder.schedule(task, schedul);
 			}
 		} catch (Exception e) {
@@ -47,7 +45,6 @@ public abstract class CalendarAnalyser extends TimerTask {
 		notifyReminder.cancel();
 		notifyReminder.purge();
 		notifyReminder = null;
-
 	}
 
 	private class NotifyTask extends TimerTask {
