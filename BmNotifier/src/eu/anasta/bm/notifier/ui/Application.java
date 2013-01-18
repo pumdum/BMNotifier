@@ -307,7 +307,7 @@ public class Application {
 
 			@Override
 			public void onModelChange() {
-				LOG.info("modéle change");
+				LOG.debug("modéle change");
 			}
 
 			@Override
