@@ -69,7 +69,7 @@ public class ClientFormLogin {
 			List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 			nvps.add(new BasicNameValuePair("login", user));
 			nvps.add(new BasicNameValuePair("password", password));
-			nvps.add(new BasicNameValuePair("priv", "public"));
+			nvps.add(new BasicNameValuePair("priv", "priv"));
 			// nvps.add(new BasicNameValuePair("storedRequestId", "public"));
 
 			httpost.setEntity(new UrlEncodedFormEntity(nvps, Consts.UTF_8));
