@@ -143,4 +143,15 @@ break;
 		System.out.println("Reminder");
 		SoundPlayer.playSound();
 	}
+
+	public void setTooltip(final String tooltip) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				if (Application.getInstance().getTrayicon().isDisposed()) return;
+				Application.getInstance().getTrayicon().setToolTipText(tooltip);
+			}
+		});
+		
+	}
 }
