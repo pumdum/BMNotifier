@@ -19,11 +19,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.Receiver;
+
 import eu.anasta.bm.notifier.calendar.CalendarManager;
 import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.mail.UnreadMailState;
 import eu.anasta.bm.notifier.mail.app.JavaPushMailAccountsManager;
+import eu.anasta.bm.notifier.receiver.NewMailReceiver;
 import eu.anasta.bm.notifier.ui.Notification.TRAY_TYPE;
 import eu.anasta.bm.notifier.ui.cache.ImageCache;
 
@@ -45,7 +48,7 @@ public class Application {
 
 	/**
 	 * Launch the application.
-	 * 
+	 *
 	 * @param args
 	 */
 	public static void main(String args[]) {
@@ -55,6 +58,8 @@ public class Application {
 			app.init();
 			app.createTray();
 			app.connect(true);
+			NewMailReceiver receiver =  new NewMailReceiver(32145, app.prefs.get(PREF_HOST, ""));
+			receiver.launch();
 			app.run();
 			app.destroyTray();
 			LOG.debug("close application");
@@ -163,7 +168,7 @@ public class Application {
 			} else {
 				port = NumberUtils.createInteger(login.getPort());
 			}
-			// accés webservice.
+			// accï¿½s webservice.
 			calendar = new CalendarManager(user, password, host) {
 
 				@Override
@@ -307,7 +312,7 @@ public class Application {
 
 			@Override
 			public void onModelChange() {
-				LOG.debug("modéle change");
+				LOG.debug("modï¿½le change");
 			}
 
 			@Override

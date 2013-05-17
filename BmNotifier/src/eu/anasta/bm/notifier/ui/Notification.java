@@ -30,7 +30,7 @@ public class Notification {
 		}
 		return instance;
 	}
-	
+
 	private String buildOpenMailUrl(String host, String uid, String folder){
 		return " <a href=\"https://"
 				+ host
@@ -38,9 +38,15 @@ public class Notification {
 				+ uid
 				+ "&_mbox="+folder+"\">open</a>";
 	}
-	
+
 	public void eventNotification(){
-		
+	}
+
+	public void sendMailTo(String host, String dest){
+		String url = "https://"
+				+ host
+				+ "/webmail/?BMHPS="+ClientFormLogin.getInstance().login()+"&_task=mail&_action=compose&_to="+dest;
+		org.eclipse.swt.program.Program.launch(url);
 	}
 
 	public void mailNotification(Message message,
@@ -54,7 +60,7 @@ public class Notification {
 			final String from = (tmpfrom.contains("<") && tmpfrom.contains(">"))?tmpfrom.substring(0, tmpfrom.indexOf("<")):tmpfrom;
 			final String subject = message.getSubject().trim();
 			final long uid = mail.getFolder().getUID(message);
-			final String url = buildOpenMailUrl(mail.getServerAddress(), Long.toString(uid), mail.getFolder().getName()); 
+			final String url = buildOpenMailUrl(mail.getServerAddress(), Long.toString(uid), mail.getFolder().getName());
 			Display.getDefault().syncExec(new Runnable() {
 
 				@Override
@@ -74,7 +80,7 @@ public class Notification {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void trayChange(TRAY_TYPE type){
 		if (Application.getInstance()==null || Application.getInstance().getTrayicon()==null)
 			return;
@@ -132,12 +138,12 @@ break;
 
 	public void eventNotification(final Occurrence occurence) {
 		Display.getDefault().asyncExec(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				Application.getInstance().getWindowEventNotif().open();
 				Application.getInstance().getWindowEventNotif().addOccurence(occurence);
-				
+
 			}
 		});
 		System.out.println("Reminder");
@@ -152,6 +158,6 @@ break;
 				Application.getInstance().getTrayicon().setToolTipText(tooltip);
 			}
 		});
-		
+
 	}
 }
