@@ -39,6 +39,10 @@ public class ClientFormLogin {
 		httpclient = new DefaultHttpClient();
 	}
 
+	public String getHost(){
+		return host;
+	}
+
 	public String login() {
 		try {
 			HttpGet httpget = new HttpGet("https://" + host + "/");
