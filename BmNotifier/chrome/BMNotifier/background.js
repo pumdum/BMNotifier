@@ -20,7 +20,8 @@ function cookiesBMHPS(cookie){
 	if (cookie==null || cookie.value==""){
 	// session expired or not created make new cookies
 		console.debug("Cookies BM not present");
-		setCookiesBMHPS(getHPS());
+		if (Hostknow) setCookiesBMHPS(getHPS());
+		else console.debug("but server unknow");
 	}else{
 		// already a cookies 
 		//
@@ -86,10 +87,9 @@ function findHost(async){
 }
 updateIcon();
 findHost(true);
-chrome.cookies.get({"url":getBmUrl(),"name":"BMHPS"},cookiesBMHPS);
+//chrome.cookies.get({"url":getBmUrl(),"name":"BMHPS"},cookiesBMHPS);
 chrome.cookies.onChanged.addListener(function(changeInfo) {
-console.debug(changeInfo.cookie);
-if (changeInfo.removed && changeInfo.cookie.name=="BMHPS"){
+if (changeInfo.removed && changeInfo.cookie.name=="BMHPS" && changeInfo.cause!="overwrite") {
 	if (!Hostknow){
 		findHost(false);
 	}
