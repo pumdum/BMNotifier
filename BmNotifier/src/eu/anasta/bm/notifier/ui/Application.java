@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 
 import eu.anasta.bm.notifier.calendar.CalendarManager;
+import eu.anasta.bm.notifier.im.XmppManager;
 import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.mail.UnreadMailState;
@@ -46,7 +47,7 @@ public class Application {
 
 	/**
 	 * Launch the application.
-	 *
+	 * 
 	 * @param args
 	 */
 	public static void main(String args[]) {
@@ -56,7 +57,7 @@ public class Application {
 			app.init();
 			app.createTray();
 			app.connect(true);
-			HttpServer receiver =  new HttpServer();
+			HttpServer receiver = new HttpServer();
 			receiver.launch();
 			app.run();
 			app.destroyTray();
@@ -78,6 +79,7 @@ public class Application {
 	private TrayItem trayicon;
 	private EventNotification windowEventNotif;
 
+	private XmppManager xmppManager;
 
 	public EventNotification getWindowEventNotif() {
 		return windowEventNotif;
@@ -151,9 +153,9 @@ public class Application {
 		String password;
 		String host;
 		int port;
-		boolean connect = false;
+		boolean authentificated = false;
 		// while not connected show login form unless autoconnect
-		while (!connect && param(autoConnect)) {
+		while (!authentificated && param(autoConnect)) {
 			user = login.getUser();
 			password = login.getPassword();
 			host = login.getHost();
@@ -166,34 +168,16 @@ public class Application {
 			} else {
 				port = NumberUtils.createInteger(login.getPort());
 			}
-			// acc�s webservice.
-			calendar = new CalendarManager(user, password, host) {
-
-				@Override
-				protected void onAuthFail(Exception e) {
-					disableSession();
-					disconnect();
-
-				}
-
-				@Override
-				protected void onDisconnect() {
-					if (isSessionEnnable()) {
-						Notification.getInstance().trayChange(
-								TRAY_TYPE.DISCONNECTED);
-					} else {
-						Notification.getInstance().trayChange(TRAY_TYPE.ERROR);
-
-					}
-
-				}
-			};
-			// ouverture du webservice;
-			connect = calendar.startPlanner();
 			ClientFormLogin.getInstance().init(host, user, password);
-			if (connect) {
+			// start calendar scan;
+			startCalendarScan(user, password, host);
+			authentificated = ClientFormLogin.getInstance().login()!=null;
+//			authentificated =true;
+			if (authentificated) {
 				// start mail push
-				scanMail(user, password, host, port);
+				startScanMail(user, password, host, port);
+				// start IM
+				startIm(user, password, host);
 				// save preference
 				prefs.put(PREF_USER, user);
 				prefs.put(PREF_PASSWORD, login.getPassword());
@@ -204,7 +188,7 @@ public class Application {
 			} else {
 				disableSession();
 				MessageDialog.openError(masterShell, "Erreur",
-						"Imposible to connect; Check user password ");
+						"Imposible to connect; Check user/password ");
 				if (autoConnect)
 					break;
 			}
@@ -292,7 +276,52 @@ public class Application {
 		}
 	}
 
-	private void scanMail(String user, String password, String host, int port) {
+	private void startIm(String user, String password, String host) {
+
+		xmppManager = new XmppManager(user, password, host) {
+
+			@Override
+			protected void onDisconnect() {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			protected void onAuthFail(Exception e) {
+				// TODO Auto-generated method stub
+
+			}
+		};
+
+	}
+
+	private boolean startCalendarScan(String user, String password, String host) {
+		calendar = new CalendarManager(user, password, host) {
+
+			@Override
+			protected void onAuthFail(Exception e) {
+				disableSession();
+				disconnect();
+
+			}
+
+			@Override
+			protected void onDisconnect() {
+				if (isSessionEnnable()) {
+					Notification.getInstance().trayChange(
+							TRAY_TYPE.DISCONNECTED);
+				} else {
+					Notification.getInstance().trayChange(TRAY_TYPE.ERROR);
+
+				}
+
+			}
+		};
+		return calendar.startPlanner();
+	}
+
+	private void startScanMail(String user, String password, String host,
+			int port) {
 
 		mailManager = new JavaPushMailAccountsManager() {
 

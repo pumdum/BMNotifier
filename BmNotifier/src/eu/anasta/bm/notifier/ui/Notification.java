@@ -8,6 +8,7 @@ import net.bluemind.core.api.calendar.Occurrence;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
+import tigase.jaxmpp.core.client.xml.XMLException;
 import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.ui.cache.ImageCache;
@@ -18,10 +19,9 @@ import eu.anasta.bm.notifier.ui.notifier.SoundPlayer;
 public class Notification {
 
 	private static Notification instance;
-	public enum TRAY_TYPE{
-		NEW_MESSAGE,
-		CONNECTED,
-		DISCONNECTED,ERROR
+
+	public enum TRAY_TYPE {
+		NEW_MESSAGE, CONNECTED, DISCONNECTED, ERROR
 	}
 
 	public static Notification getInstance() {
@@ -31,46 +31,48 @@ public class Notification {
 		return instance;
 	}
 
-	private String buildOpenMailUrl(String host, String uid, String folder){
-		return " <a href=\"https://"
-				+ host
-				+ "/webmail/?BMHPS="+ClientFormLogin.getInstance().login()+"&_task=mail&_action=show&_uid="
-				+ uid
-				+ "&_mbox="+folder+"\">open</a>";
+	private String buildOpenMailUrl(String host, String uid, String folder) {
+		return " <a href=\"https://" + host + "/webmail/?BMHPS="
+				+ ClientFormLogin.getInstance().login()
+				+ "&_task=mail&_action=show&_uid=" + uid + "&_mbox=" + folder
+				+ "\">open</a>";
 	}
 
-	public void eventNotification(){
+	private String buildOpenIMUrl(String host) {
+		return " <a href=\"https://" + host + "/im/?BMHPS="
+				+ ClientFormLogin.getInstance().login() + "\">open</a>";
 	}
 
-	public void sendMailTo(String host, String dest){
-		String url = "https://"
-				+ host
-				+ "/webmail/?BMHPS="+ClientFormLogin.getInstance().login()+"&_task=mail&_action=compose&_to="+dest;
+	public void eventNotification() {
+	}
+
+	public void sendMailTo(String host, String dest) {
+		String url = "https://" + host + "/webmail/?BMHPS="
+				+ ClientFormLogin.getInstance().login()
+				+ "&_task=mail&_action=compose&_to=" + dest;
 		org.eclipse.swt.program.Program.launch(url);
 	}
 
-	public void mailNotification(Message message,
-			final JavaPushMailAccount mail) {
+	public void mailNotification(Message message, final JavaPushMailAccount mail) {
 		if (message == null) {
 			return;
 		}
 		;
 		try {
 			String tmpfrom = message.getFrom()[0].toString();
-			final String from = (tmpfrom.contains("<") && tmpfrom.contains(">"))?tmpfrom.substring(0, tmpfrom.indexOf("<")):tmpfrom;
+			final String from = (tmpfrom.contains("<") && tmpfrom.contains(">")) ? tmpfrom
+					.substring(0, tmpfrom.indexOf("<")) : tmpfrom;
 			final String subject = message.getSubject().trim();
 			final long uid = mail.getFolder().getUID(message);
-			final String url = buildOpenMailUrl(mail.getServerAddress(), Long.toString(uid), mail.getFolder().getName());
+			final String url = buildOpenMailUrl(mail.getServerAddress(),
+					Long.toString(uid), mail.getFolder().getName());
 			Display.getDefault().syncExec(new Runnable() {
 
 				@Override
 				public void run() {
 					// TODO externalyse alert
-					NotifierDialog
-							.notify(from,
-									subject,
-									NotificationType.MAIL,
-									url);
+					NotifierDialog.notify(from, subject, NotificationType.MAIL,
+							url);
 
 				}
 			});
@@ -81,8 +83,38 @@ public class Notification {
 		}
 	}
 
-	public void trayChange(TRAY_TYPE type){
-		if (Application.getInstance()==null || Application.getInstance().getTrayicon()==null)
+	public void xmppNotification(
+			tigase.jaxmpp.core.client.xmpp.stanzas.Message message) {
+		if (message == null) {
+			return;
+		}
+		;
+		String tmpfrom;
+		try {
+			tmpfrom = message.getFrom().getBareJid().toString();
+			final String from = tmpfrom;
+			final String subject = message.getBody();
+			final String url = buildOpenIMUrl("debian.anasta.eu");
+			Display.getDefault().syncExec(new Runnable() {
+
+				@Override
+				public void run() {
+					// TODO externalyse alert
+					NotifierDialog.notify(from, subject, NotificationType.MAIL,
+							url);
+
+				}
+			});
+			SoundPlayer.playSound();
+		} catch (XMLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void trayChange(TRAY_TYPE type) {
+		if (Application.getInstance() == null
+				|| Application.getInstance().getTrayicon() == null)
 			return;
 		switch (type) {
 		case CONNECTED:
@@ -91,7 +123,8 @@ public class Notification {
 				public void run() {
 					final Image imageMail = ImageCache
 							.getImage(ImageCache.LITLLE_BM);
-					if (Application.getInstance().getTrayicon().isDisposed()) return;
+					if (Application.getInstance().getTrayicon().isDisposed())
+						return;
 					Application.getInstance().getTrayicon().setImage(imageMail);
 				}
 			});
@@ -103,7 +136,8 @@ public class Notification {
 				public void run() {
 					final Image imageMail = ImageCache
 							.getImage(ImageCache.LITLLE_WARNING);
-					if (Application.getInstance().getTrayicon().isDisposed()) return;
+					if (Application.getInstance().getTrayicon().isDisposed())
+						return;
 					Application.getInstance().getTrayicon().setImage(imageMail);
 				}
 			});
@@ -115,7 +149,8 @@ public class Notification {
 				public void run() {
 					final Image imageMail = ImageCache
 							.getImage(ImageCache.LITLLE_MAIL);
-					if (Application.getInstance().getTrayicon().isDisposed()) return;
+					if (Application.getInstance().getTrayicon().isDisposed())
+						return;
 					Application.getInstance().getTrayicon().setImage(imageMail);
 				}
 			});
@@ -126,11 +161,12 @@ public class Notification {
 				public void run() {
 					final Image imageMail = ImageCache
 							.getImage(ImageCache.LITLLE_ERROR);
-					if (Application.getInstance().getTrayicon().isDisposed()) return;
+					if (Application.getInstance().getTrayicon().isDisposed())
+						return;
 					Application.getInstance().getTrayicon().setImage(imageMail);
 				}
 			});
-break;
+			break;
 		default:
 			break;
 		}
@@ -142,7 +178,8 @@ break;
 			@Override
 			public void run() {
 				Application.getInstance().getWindowEventNotif().open();
-				Application.getInstance().getWindowEventNotif().addOccurence(occurence);
+				Application.getInstance().getWindowEventNotif()
+						.addOccurence(occurence);
 
 			}
 		});
@@ -154,7 +191,8 @@ break;
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				if (Application.getInstance().getTrayicon().isDisposed()) return;
+				if (Application.getInstance().getTrayicon().isDisposed())
+					return;
 				Application.getInstance().getTrayicon().setToolTipText(tooltip);
 			}
 		});

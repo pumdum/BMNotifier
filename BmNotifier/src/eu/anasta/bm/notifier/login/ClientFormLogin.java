@@ -1,5 +1,6 @@
 package eu.anasta.bm.notifier.login;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,9 +38,10 @@ public class ClientFormLogin {
 		this.user = user;
 		this.password = password;
 		httpclient = new DefaultHttpClient();
+		
 	}
 
-	public String getHost(){
+	public String getHost() {
 		return host;
 	}
 
@@ -54,7 +56,9 @@ public class ClientFormLogin {
 			EntityUtils.consume(entity);
 			// HttpResponse response ;
 			// HttpEntity entity ;
-			if (response.getFirstHeader("BMAuth")!=null && response.getFirstHeader("BMAuth").getValue().equals("OK")) {
+			if (response.getFirstHeader("BMAuth") != null
+					&& response.getFirstHeader("BMAuth").getValue()
+							.equals("OK")) {
 				List<Cookie> cookies = httpclient.getCookieStore().getCookies();
 				if (cookies.isEmpty()) {
 					LOG.debug("Session not enabled");
@@ -83,12 +87,14 @@ public class ClientFormLogin {
 
 			LOG.debug("Login form post: " + response.getStatusLine());
 			EntityUtils.consume(entity);
-			if (response.getFirstHeader("BMAuth")!=null && response.getFirstHeader("BMAuth").getValue().equals("OK")) {
+			if (response.getFirstHeader("BMAuth") != null
+					&& response.getFirstHeader("BMAuth").getValue()
+							.equals("OK")) {
 				List<Cookie> cookies = httpclient.getCookieStore().getCookies();
 				if (!cookies.isEmpty()) {
 					for (int i = 0; i < cookies.size(); i++) {
 						if (cookies.get(i).getName().equals("BMHPS")) {
-							LOG.debug("bmhps : "+cookies.get(i).getValue());
+							LOG.debug("bmhps : " + cookies.get(i).getValue());
 							return cookies.get(i).getValue();
 						}
 					}
@@ -96,7 +102,7 @@ public class ClientFormLogin {
 			}
 			return null;
 		} catch (Exception e) {
-			// TODO log error
+			e.printStackTrace();
 			return null;
 		}
 		// finally {
@@ -105,6 +111,45 @@ public class ClientFormLogin {
 		// // immediate deallocation of all system resources
 		// httpclient.getConnectionManager().shutdown();
 		// }
+	}
+
+	public boolean authentification() {
+		try {
+			HttpGet httpget = new HttpGet("https://" + host + "/");
+
+			HttpResponse response = httpclient.execute(httpget);
+			HttpEntity entity = response.getEntity();
+
+			LOG.debug("Login form get: " + response.getStatusLine());
+			EntityUtils.consume(entity);
+			HttpPost httpost = new HttpPost("https://" + host
+					+ "/bluemind_sso_security?");
+
+			List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+			nvps.add(new BasicNameValuePair("login", user));
+			nvps.add(new BasicNameValuePair("password", password));
+			nvps.add(new BasicNameValuePair("priv", "priv"));
+			// nvps.add(new BasicNameValuePair("storedRequestId", "public"));
+
+			httpost.setEntity(new UrlEncodedFormEntity(nvps, Consts.UTF_8));
+
+			response = httpclient.execute(httpost);
+			entity = response.getEntity();
+
+			LOG.debug("Login form post: " + response.getStatusLine());
+			EntityUtils.consume(entity);
+			if (response.getFirstHeader("BMAuth") != null
+					&& response.getFirstHeader("BMAuth").getValue()
+							.equals("OK")) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			// TODO LOG
+			return false;
+		}
 	}
 
 	public void closeFormLogin() {
