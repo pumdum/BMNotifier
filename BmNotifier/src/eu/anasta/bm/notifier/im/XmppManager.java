@@ -1,8 +1,6 @@
 package eu.anasta.bm.notifier.im;
 
-import eu.anasta.bm.notifier.ui.Notification;
 import tigase.jaxmpp.core.client.BareJID;
-import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
@@ -12,19 +10,20 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
+import eu.anasta.bm.notifier.ui.Notification;
 
 
 public abstract class XmppManager {
-	private static final String TEST_ANASTA_EU = "test@anasta.eu";
 	boolean chatOpen=false;
 	
 	public XmppManager() {
 		// TODO Auto-generated constructor stub
 	}
 
+	private Jaxmpp jaxmpp;
 	public void start(final String user, String password, String host) {
-	       final Jaxmpp jaxmpp = new Jaxmpp();
 	       try{
+	    	   jaxmpp = new Jaxmpp();
 	               jaxmpp.getModulesManager().getModule( PresenceModule.class ).addListener( PresenceModule.ContactChangedPresence, new Listener<PresenceModule.PresenceEvent>() {
 	       
 	                   @Override
@@ -54,10 +53,9 @@ public abstract class XmppManager {
 	    						}
 	    					}
 	    				});
-	       
-	               jaxmpp.getProperties().setUserProperty( SessionObject.SERVER_NAME, host);
-	               jaxmpp.getProperties().setUserProperty( SessionObject.USER_BARE_JID, BareJID.bareJIDInstance( user ) );
-	               jaxmpp.getProperties().setUserProperty( SessionObject.PASSWORD, password );
+	               jaxmpp.getConnectionConfiguration().setServer(host);
+	               jaxmpp.getConnectionConfiguration().setUserJID(BareJID.bareJIDInstance( user ));
+	               jaxmpp.getConnectionConfiguration().setUserPassword(password);
 	               jaxmpp.login();
 		}catch (Exception e){
 			e.printStackTrace();

@@ -12,23 +12,6 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import eu.anasta.bm.notifier.login.ClientFormLogin;
 
 public class BmInterneHandler extends AbstractHandler {
-//	private String host;
-
-//	public BmInterneHandler(String hostServer) {
-//		host = hostServer;
-//	}
-//
-//
-//	public String getHost() {
-//		return host;
-//	}
-//
-//
-//	public void setHost(String host) {
-//		this.host = host;
-//	}
-
-
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		response.setContentType("application/json");

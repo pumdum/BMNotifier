@@ -240,14 +240,17 @@ public class Application {
 	private void disconnect() {
 		LOG.debug("close connection");
 		// disconnect service if possible
+		if (prober != null){
+			prober.stop();
+		}
 		if (mailManager != null && mailManager.getAccount() != null)
 			mailManager.disconnectAccounts();
 		if (calendar != null){
 			calendar.stopPlanner();
 			calendar.close();
 		}
-		if (prober != null){
-			prober.stop();
+		if( xmppManager!=null){
+			xmppManager.stopPlanner();
 		}
 		Notification.getInstance().trayChange(TRAY_TYPE.DISCONNECTED);
 		connected =false;
