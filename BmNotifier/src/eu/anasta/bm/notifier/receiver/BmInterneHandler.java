@@ -10,7 +10,6 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import eu.anasta.bm.notifier.login.ClientFormLogin;
-import eu.anasta.bm.notifier.ui.Notification;
 
 public class BmInterneHandler extends AbstractHandler {
 //	private String host;

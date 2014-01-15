@@ -26,19 +26,17 @@ public abstract class CalendarManager {
 	private static final long ELAPSETIMEBETEEWNSEARCH = 1000 * 60 * 10;
 	private static final long MARGETIMESYNCRO = 1000 * 60 * 60 * 3;
 	private CalendarAnalyser task;
-	String user;
-	String password;
-	String host;
+	private String user;
+	private String password;
+	private String host;
+	private String version="0";
 
-	public CalendarManager(String user, String password, String host) {
-		failSearch = 0;
-		this.user = user;
-		this.password = password;
-		this.host = host;
+	public CalendarManager() {
 	}
 
-	private void close() {
-		cal.logout(token);
+	public void close() {
+		if (cal != null)
+			cal.logout(token);
 	}
 
 	private boolean openWebservice() {
@@ -46,11 +44,15 @@ public abstract class CalendarManager {
 		// via l'url du serveur Blue Mind
 		String url = "https://" + host + "/services";
 		this.cal = cl.locate(url);
-		token = cal.login(user, password, "BM Notifier");
-		// start session
-		System.out.println(token.getSessionId());
-		System.out.println(token.getAuthService());
-		System.out.println(token.getUserId());
+		try {
+			token = cal.login(user, password, "BM Notifier");
+			System.out.println(token.getSessionId());
+			System.out.println(token.getAuthService());
+			System.out.println(token.getUserId());
+			if (token!=null)version =token.getVersion().getMajor();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return (token != null && token.getSessionId() != null);
 	}
 
@@ -62,7 +64,7 @@ public abstract class CalendarManager {
 		// determine que la prochaine recherche aura a l'instant T + temps entre
 		// chaque recherche (10min) + une marge d'ecart en cas de synchro entre
 		// serveur et client (ici 3 minute)
-		// TODO prevoir un fichier de paramétre
+		// TODO prevoir un fichier de paramï¿½tre
 		Long nextSearch = now.getTimeInMillis() + ELAPSETIMEBETEEWNSEARCH
 				+ MARGETIMESYNCRO;
 		CalendarQuery cq = new CalendarQuery();
@@ -73,7 +75,7 @@ public abstract class CalendarManager {
 			net.bluemind.core.api.calendar.Event e = oc.getEvent();
 			if (e.getAlert() == null)
 				continue;
-			// heure a la quelle à la quelle l'alert doit être donnée
+			// heure a la quelle ï¿½ la quelle l'alert doit ï¿½tre donnï¿½e
 			Long alertAt = oc.getBegin() - 1000 * e.getAlert();
 			// si l'alert a lieux entre mtn et la prochaine recherche on
 			// l'ajoute a la liste des rapelle de notre recherche
@@ -86,7 +88,12 @@ public abstract class CalendarManager {
 
 	}
 
-	public boolean startPlanner() {
+	public boolean startPlanner(String user, String password, String host) {
+		failSearch = 0;
+		this.user = user;
+		this.password = password;
+		this.host = host;
+
 		if (!openWebservice()) {
 			return false;
 		}
@@ -122,14 +129,20 @@ public abstract class CalendarManager {
 	protected abstract void onAuthFail(Exception e);
 
 	public void stopPlanner() {
-		if (plannerNextReminder == null)
-			return;
+		if (plannerNextReminder != null) {
+			task.stopNotifyTimer();
+			plannerNextReminder.cancel();
+			plannerNextReminder.purge();
+			plannerNextReminder = null;
+		}
+	}
 
-		task.stopNotifyTimer();
-		plannerNextReminder.cancel();
-		plannerNextReminder.purge();
-		plannerNextReminder = null;
-		close();
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
 	}
 
 }

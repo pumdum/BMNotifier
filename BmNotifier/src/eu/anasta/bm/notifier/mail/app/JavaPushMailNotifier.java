@@ -14,6 +14,7 @@ import eu.anasta.bm.notifier.ui.Notification;
 /**
  * 
  * @author Mo Firouz
+ * @revision Nico.Dumont
  * @since 2/10/11
  */
 public class JavaPushMailNotifier {
@@ -86,20 +87,6 @@ public class JavaPushMailNotifier {
 		return false;
 	}
 	
-//	private void printHeader(Message e){
-//		Enumeration<Header> headers;
-//		try {
-//			headers = e.getAllHeaders();
-//			while (headers.hasMoreElements()) {
-//				Header h = (Header) headers.nextElement();
-//				System.out.println(h.getName() + ": " + h.getValue());
-//			}
-//		} catch (MessagingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//			
-//	}
 
 	private void showNotification(Message message) throws MessagingException {
 		Notification.getInstance().mailNotification(message, mail);

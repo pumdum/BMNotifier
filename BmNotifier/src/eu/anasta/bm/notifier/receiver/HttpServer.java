@@ -5,8 +5,10 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
 public class HttpServer {
+	Thread serverThread;
+	Server server ;
 	public void launch() {
-		Thread serverThread = new Thread("UniqueInstance-PortListenerThread") {
+		serverThread = new Thread("UniqueInstance-PortListenerThread") {
 
 			{
 				setDaemon(true);
@@ -15,7 +17,7 @@ public class HttpServer {
 			@Override
 			public void run() {
 				try {
-					Server server = new Server();
+					server = new Server();
 					SelectChannelConnector http= new SelectChannelConnector();
 			        http.setHost("localhost");
 			        http.setPort(51985);
@@ -35,5 +37,16 @@ public class HttpServer {
 		serverThread.start();
 
 	}
-
+	
+	public void stop(){
+	if (server!=null){
+		try {
+			server.stop();
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+			server.destroy();
+		}
+	}
+}
 }

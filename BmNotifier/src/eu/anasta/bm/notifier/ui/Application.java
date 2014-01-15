@@ -25,6 +25,7 @@ import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.mail.UnreadMailState;
 import eu.anasta.bm.notifier.mail.app.JavaPushMailAccountsManager;
+import eu.anasta.bm.notifier.network.NetworkProber;
 import eu.anasta.bm.notifier.receiver.HttpServer;
 import eu.anasta.bm.notifier.ui.Notification.TRAY_TYPE;
 import eu.anasta.bm.notifier.ui.cache.ImageCache;
@@ -41,6 +42,9 @@ public class Application {
 
 	private static final Logger LOG = Logger.getLogger(Application.class);
 
+	private boolean connected = false;
+	private boolean supportXmpp;
+
 	public static Application getInstance() {
 		return instance;
 	}
@@ -51,19 +55,25 @@ public class Application {
 	 * @param args
 	 */
 	public static void main(String args[]) {
+		HttpServer receiver =null;
 		try {
 			LOG.debug("start application");
 			final Application app = new Application();
 			app.init();
 			app.createTray();
 			app.connect(true);
-			HttpServer receiver = new HttpServer();
+			receiver = new HttpServer();
 			receiver.launch();
 			app.run();
 			app.destroyTray();
 			LOG.debug("close application");
 		} catch (Exception e) {
+			e.printStackTrace();
 			LOG.error(e);
+		}finally{
+			if (receiver!=null){
+				receiver.stop();
+			}
 		}
 	}
 
@@ -80,6 +90,8 @@ public class Application {
 	private EventNotification windowEventNotif;
 
 	private XmppManager xmppManager;
+
+	private NetworkProber prober;
 
 	public EventNotification getWindowEventNotif() {
 		return windowEventNotif;
@@ -122,7 +134,7 @@ public class Application {
 			mi.addListener(SWT.Selection, new Listener() {
 				public void handleEvent(Event event) {
 					disconnect();
-					disableSession();
+					setParamInvalid();
 				}
 
 			});
@@ -134,7 +146,7 @@ public class Application {
 			});
 			trayicon.addListener(SWT.DefaultSelection, new Listener() {
 				public void handleEvent(Event event) {
-					if (isSessionEnnable()) {
+					if (isParamValid()) {
 						org.eclipse.swt.program.Program.launch("http://"
 								+ prefs.get(PREF_HOST, "") + "?BMHPS="
 								+ ClientFormLogin.getInstance().login());
@@ -153,45 +165,61 @@ public class Application {
 		String password;
 		String host;
 		int port;
-		boolean authentificated = false;
 		// while not connected show login form unless autoconnect
-		while (!authentificated && param(autoConnect)) {
+		while (!connected && param(autoConnect)) {
 			user = login.getUser();
 			password = login.getPassword();
 			host = login.getHost();
 			if (!NumberUtils.isNumber(login.getPort())) {
 				// not numeric port -> error and continue
-				disableSession();
+				setParamInvalid();
 				MessageDialog.openError(masterShell, "Erreur",
 						"port imap incorecte ");
 				continue;
 			} else {
 				port = NumberUtils.createInteger(login.getPort());
 			}
-			ClientFormLogin.getInstance().init(host, user, password);
-			// start calendar scan;
-			startCalendarScan(user, password, host);
-			authentificated = ClientFormLogin.getInstance().login()!=null;
-//			authentificated =true;
-			if (authentificated) {
-				// start mail push
-				startScanMail(user, password, host, port);
-				// start IM
-				startIm(user, password, host);
-				// save preference
-				prefs.put(PREF_USER, user);
-				prefs.put(PREF_PASSWORD, login.getPassword());
-				prefs.put(PREF_HOST, login.getHost());
-				prefs.put(PREF_PORT, login.getPort());
-				ennableSession();
-				Notification.getInstance().trayChange(TRAY_TYPE.CONNECTED);
-			} else {
-				disableSession();
+
+			// try to ping server
+			boolean serverping = startnetworkProber(host, port);
+			if (!serverping) {
+				setParamInvalid();
 				MessageDialog.openError(masterShell, "Erreur",
-						"Imposible to connect; Check user/password ");
+						"Imposible to connect; host unavailable");
 				if (autoConnect)
 					break;
+				else
+					continue;
 			}
+			// try to start calendar
+			ClientFormLogin.getInstance().init(host, user, password);
+			boolean calendarstart = startCalendarScan(user, password, host);
+			if (!calendarstart) {
+				setParamInvalid();
+				MessageDialog.openError(masterShell, "Erreur",
+						"Imposible to connect; chek user password");
+				if (autoConnect)
+					break;
+				else
+					continue;
+			}
+
+			startScanMail(user, password, host, port);
+
+			if (supportXmpp) {
+				// start IM
+				startIm(user, password, host);
+			}
+
+			// save preference
+			prefs.put(PREF_USER, user);
+			prefs.put(PREF_PASSWORD, login.getPassword());
+			prefs.put(PREF_HOST, login.getHost());
+			prefs.put(PREF_PORT, login.getPort());
+
+			setParamValid();
+			connected=true;
+			Notification.getInstance().trayChange(TRAY_TYPE.CONNECTED);
 		}
 
 	}
@@ -204,7 +232,7 @@ public class Application {
 		display.dispose();
 	}
 
-	private void disableSession() {
+	private void setParamInvalid() {
 		// set flag of session state to invalid
 		prefs.putBoolean(PREF_VALID, false);
 	}
@@ -212,14 +240,20 @@ public class Application {
 	private void disconnect() {
 		LOG.debug("close connection");
 		// disconnect service if possible
-		if (mailManager != null)
+		if (mailManager != null && mailManager.getAccount() != null)
 			mailManager.disconnectAccounts();
-		if (calendar != null)
+		if (calendar != null){
 			calendar.stopPlanner();
+			calendar.close();
+		}
+		if (prober != null){
+			prober.stop();
+		}
 		Notification.getInstance().trayChange(TRAY_TYPE.DISCONNECTED);
+		connected =false;
 	}
 
-	private void ennableSession() {
+	private void setParamValid() {
 		prefs.putBoolean(PREF_VALID, true);
 	}
 
@@ -247,19 +281,20 @@ public class Application {
 			LOG.debug("build notification event");
 			windowEventNotif = new EventNotification();
 			LOG.debug("end init application");
+			buildManager();
 		} catch (Exception e) {
 			LOG.error(e);
 		}
 
 	}
 
-	private boolean isSessionEnnable() {
+	private boolean isParamValid() {
 		return prefs.getBoolean(PREF_VALID, false);
 	}
 
 	private boolean param(boolean autoConnect) {
 		int reponse = Window.OK;
-		if (!prefs.getBoolean(PREF_VALID, false)) {
+		if (!isParamValid()) {
 			if (autoConnect)
 				reponse = Window.CANCEL;
 			else
@@ -276,38 +311,28 @@ public class Application {
 		}
 	}
 
-	private void startIm(String user, String password, String host) {
-
-		xmppManager = new XmppManager(user, password, host) {
-
+	private void buildManager() {
+		xmppManager = new XmppManager() {
 			@Override
 			protected void onDisconnect() {
 				// TODO Auto-generated method stub
-
 			}
 
 			@Override
 			protected void onAuthFail(Exception e) {
 				// TODO Auto-generated method stub
-
 			}
 		};
-
-	}
-
-	private boolean startCalendarScan(String user, String password, String host) {
-		calendar = new CalendarManager(user, password, host) {
-
+		calendar = new CalendarManager() {
 			@Override
 			protected void onAuthFail(Exception e) {
-				disableSession();
+				setParamInvalid();
 				disconnect();
-
 			}
 
 			@Override
 			protected void onDisconnect() {
-				if (isSessionEnnable()) {
+				if (isParamValid()) {
 					Notification.getInstance().trayChange(
 							TRAY_TYPE.DISCONNECTED);
 				} else {
@@ -317,12 +342,6 @@ public class Application {
 
 			}
 		};
-		return calendar.startPlanner();
-	}
-
-	private void startScanMail(String user, String password, String host,
-			int port) {
-
 		mailManager = new JavaPushMailAccountsManager() {
 
 			@Override
@@ -330,11 +349,10 @@ public class Application {
 				LOG.error("[ERROR] on mail manager -> disconnect ", ex);
 				if (ex instanceof AuthenticationFailedException) {
 					disconnect();
-					disableSession();
+					setParamInvalid();
 					MessageDialog.openError(masterShell, "Erreur",
 							"Imposible to connect; Check user password ");
 				}
-
 			}
 
 			@Override
@@ -352,7 +370,52 @@ public class Application {
 				}
 			}
 		};
-		mailManager.setAccount("BM", host, port, false, user, password);
+
+		prober = new NetworkProber() {
+
+			@Override
+			public void onNetworkChange(boolean status) {
+				if (!status && connected) {
+					if (getSessionFailureCount() >= 2
+							|| getPingFailureCount() >= 2) {
+						LOG.info("msut be connction vut seem be off");
+						connected = false;
+						connect(true);
+					}
+				}
+			}
+
+			@Override
+			public void missedBeat() {
+				// TODO Auto-generated method stub
+				connect(true);
+			}
+		};
+	}
+
+	private void startIm(String user, String password, String host) {
+		xmppManager.start(user, password, host);
+	}
+
+	private boolean startCalendarScan(String user, String password, String host) {
+		boolean started = calendar.startPlanner(user, password, host);
+		if (started) {
+			supportXmpp = "3".equals(calendar.getVersion());
+		}
+		return started;
+	}
+
+	private void startScanMail(String user, String password, String host,
+			int port) {
+
+		mailManager.setAccount("BMNotifierScanMail", host, port, false, user,
+				password);
+
+	}
+
+	private boolean startnetworkProber(String host, int port) {
+
+		return prober.start(host, port);
 
 	}
 

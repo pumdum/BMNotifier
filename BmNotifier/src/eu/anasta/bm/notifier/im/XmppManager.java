@@ -17,8 +17,12 @@ import tigase.jaxmpp.j2se.Jaxmpp;
 public abstract class XmppManager {
 	private static final String TEST_ANASTA_EU = "test@anasta.eu";
 	boolean chatOpen=false;
+	
+	public XmppManager() {
+		// TODO Auto-generated constructor stub
+	}
 
-	public XmppManager(final String user, String password, String host) {
+	public void start(final String user, String password, String host) {
 	       final Jaxmpp jaxmpp = new Jaxmpp();
 	       try{
 	               jaxmpp.getModulesManager().getModule( PresenceModule.class ).addListener( PresenceModule.ContactChangedPresence, new Listener<PresenceModule.PresenceEvent>() {
