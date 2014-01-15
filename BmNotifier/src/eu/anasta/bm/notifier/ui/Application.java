@@ -34,21 +34,17 @@ public class Application {
 
 	private static Application instance;
 
-	private static final String PREF_USER = "user";
-	private static final String PREF_PASSWORD = "password";
-	private static final String PREF_HOST = "host";
-	private static final String PREF_PORT = "port";
-	private static final String PREF_VALID = "validParam";
-
 	private static final Logger LOG = Logger.getLogger(Application.class);
+	private static final String PREF_HOST = "host";
+	private static final String PREF_PASSWORD = "password";
+	private static final String PREF_PORT = "port";
+	private static final String PREF_USER = "user";
 
-	private boolean connected = false;
-	private boolean supportXmpp;
+	private static final String PREF_VALID = "validParam";
 
 	public static Application getInstance() {
 		return instance;
 	}
-
 	/**
 	 * Launch the application.
 	 * 
@@ -77,85 +73,110 @@ public class Application {
 		}
 	}
 
-	private final Preferences prefs = Preferences
-			.userNodeForPackage(Application.class);
-
-	private JavaPushMailAccountsManager mailManager;
 	private CalendarManager calendar;
 
-	private Shell masterShell;
+	private boolean connected = false;
+
 	private Display display;
+
 	private Login login;
+	private JavaPushMailAccountsManager mailManager;
+
+	private Shell masterShell;
+	private final Preferences prefs = Preferences
+			.userNodeForPackage(Application.class);
+	private NetworkProber prober;
+	private boolean supportXmpp;
 	private TrayItem trayicon;
+
 	private EventNotification windowEventNotif;
 
 	private XmppManager xmppManager;
-
-	private NetworkProber prober;
-
-	public EventNotification getWindowEventNotif() {
-		return windowEventNotif;
-	}
 
 	private Application() {
 		Application.instance = this;
 	}
 
-	private void createTray() throws Exception {
-		LOG.debug("create tray icon");
-		Image imageBM = ImageCache.getImage(ImageCache.LITLLE_ERROR);
-		final Tray tray = display.getSystemTray();
-		if (tray == null) {
-			LOG.error("Tray not supported");
-			throw new Exception("System tray not suported");
-		} else {
-			trayicon = new TrayItem(tray, SWT.NONE);
-			trayicon.setToolTipText("BM Notifier");
-			final Menu menu = new Menu(masterShell, SWT.POP_UP);
-			MenuItem mi = new MenuItem(menu, SWT.PUSH);
-			mi.setText("close");
-			mi.addListener(SWT.Selection, new Listener() {
-				public void handleEvent(Event event) {
-					disconnect();
-					masterShell.close();
-				}
-			});
-			menu.setDefaultItem(mi);
-			mi = new MenuItem(menu, SWT.PUSH);
-			mi.setText("connect");
-			mi.addListener(SWT.Selection, new Listener() {
-				public void handleEvent(Event event) {
-					connect(false);
+	private void buildManager() {
+		xmppManager = new XmppManager() {
+			@Override
+			protected void onAuthFail(Exception e) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			protected void onDisconnect() {
+				// TODO Auto-generated method stub
+			}
+		};
+		calendar = new CalendarManager() {
+			@Override
+			protected void onAuthFail(Exception e) {
+				setParamInvalid();
+				disconnect();
+			}
+
+			@Override
+			protected void onDisconnect() {
+				if (isParamValid()) {
+					Notification.getInstance().trayChange(
+							TRAY_TYPE.DISCONNECTED);
+				} else {
+					Notification.getInstance().trayChange(TRAY_TYPE.ERROR);
+
 				}
 
-			});
-			mi = new MenuItem(menu, SWT.PUSH);
-			mi.setText("disconect");
-			mi.addListener(SWT.Selection, new Listener() {
-				public void handleEvent(Event event) {
+			}
+		};
+		mailManager = new JavaPushMailAccountsManager() {
+
+			@Override
+			public void handleError(JavaPushMailAccount acc, Exception ex) {
+				LOG.error("[ERROR] on mail manager -> disconnect ", ex);
+				if (ex instanceof AuthenticationFailedException) {
 					disconnect();
 					setParamInvalid();
+					MessageDialog.openError(masterShell, "Erreur",
+							"Imposible to connect; Check user password ");
 				}
+			}
 
-			});
+			@Override
+			public void onModelChange() {
+				LOG.debug("mod�le change");
+			}
 
-			trayicon.addListener(SWT.MenuDetect, new Listener() {
-				public void handleEvent(Event event) {
-					menu.setVisible(true);
+			@Override
+			public void onStateChange() {
+				if (this.isConnected()) {
+					UnreadMailState.check();
+				} else {
+					Notification.getInstance().trayChange(
+							TRAY_TYPE.DISCONNECTED);
 				}
-			});
-			trayicon.addListener(SWT.DefaultSelection, new Listener() {
-				public void handleEvent(Event event) {
-					if (isParamValid()) {
-						org.eclipse.swt.program.Program.launch("http://"
-								+ prefs.get(PREF_HOST, "") + "?BMHPS="
-								+ ClientFormLogin.getInstance().login());
+			}
+		};
+
+		prober = new NetworkProber() {
+
+			@Override
+			public void missedBeat() {
+				// TODO Auto-generated method stub
+				connect(true);
+			}
+
+			@Override
+			public void onNetworkChange(boolean status) {
+				if (!status && connected) {
+					if (getSessionFailureCount() >= 2
+							|| getPingFailureCount() >= 2) {
+						LOG.info("msut be connction vut seem be off");
+						connected = false;
+						connect(true);
 					}
 				}
-			});
-			trayicon.setImage(imageBM);
-		}
-
+			}
+		};
 	}
 
 	public void connect(boolean autoConnect) {
@@ -212,14 +233,71 @@ public class Application {
 			}
 
 			// save preference
-			prefs.put(PREF_USER, user);
-			prefs.put(PREF_PASSWORD, login.getPassword());
-			prefs.put(PREF_HOST, login.getHost());
-			prefs.put(PREF_PORT, login.getPort());
+			setPrefUser(user);
+			setPrefPassword(login.getPassword());
+			setPrefHost(login.getHost());
+			setPrefPort(login.getPort());
 
 			setParamValid();
 			connected=true;
 			Notification.getInstance().trayChange(TRAY_TYPE.CONNECTED);
+		}
+
+	}
+
+	private void createTray() throws Exception {
+		LOG.debug("create tray icon");
+		Image imageBM = ImageCache.getImage(ImageCache.BM_STATUS_DISCONECT);
+		final Tray tray = display.getSystemTray();
+		if (tray == null) {
+			LOG.error("Tray not supported");
+			throw new Exception("System tray not suported");
+		} else {
+			trayicon = new TrayItem(tray, SWT.NONE);
+			trayicon.setToolTipText("BM Notifier");
+			final Menu menu = new Menu(masterShell, SWT.POP_UP);
+			MenuItem mi = new MenuItem(menu, SWT.PUSH);
+			mi.setText("close");
+			mi.addListener(SWT.Selection, new Listener() {
+				public void handleEvent(Event event) {
+					disconnect();
+					masterShell.close();
+				}
+			});
+			menu.setDefaultItem(mi);
+			mi = new MenuItem(menu, SWT.PUSH);
+			mi.setText("connect");
+			mi.addListener(SWT.Selection, new Listener() {
+				public void handleEvent(Event event) {
+					connect(false);
+				}
+
+			});
+			mi = new MenuItem(menu, SWT.PUSH);
+			mi.setText("disconect");
+			mi.addListener(SWT.Selection, new Listener() {
+				public void handleEvent(Event event) {
+					disconnect();
+					setParamInvalid();
+				}
+
+			});
+
+			trayicon.addListener(SWT.MenuDetect, new Listener() {
+				public void handleEvent(Event event) {
+					menu.setVisible(true);
+				}
+			});
+			trayicon.addListener(SWT.DefaultSelection, new Listener() {
+				public void handleEvent(Event event) {
+					if (isParamValid()) {
+						org.eclipse.swt.program.Program.launch("http://"
+								+ getPrefHost() + "?BMHPS="
+								+ ClientFormLogin.getInstance().login());
+					}
+				}
+			});
+			trayicon.setImage(imageBM);
 		}
 
 	}
@@ -230,11 +308,6 @@ public class Application {
 		disconnect();
 		ImageCache.dispose();
 		display.dispose();
-	}
-
-	private void setParamInvalid() {
-		// set flag of session state to invalid
-		prefs.putBoolean(PREF_VALID, false);
 	}
 
 	private void disconnect() {
@@ -255,17 +328,36 @@ public class Application {
 		Notification.getInstance().trayChange(TRAY_TYPE.DISCONNECTED);
 		connected =false;
 	}
-
-	private void setParamValid() {
-		prefs.putBoolean(PREF_VALID, true);
+	public String getActiveHost() throws Exception {
+		if (connected){
+			return getPrefHost();
+		}
+		throw new Exception("Not connected");
 	}
 
 	public JavaPushMailAccountsManager getMailManager() {
 		return mailManager;
 	}
+	private String getPrefHost(){
+		return prefs.get(PREF_HOST, "");
+	}
 
+	
+	private String getPrefPasswor(){
+		return prefs.get(PREF_PASSWORD, "");
+	}
+	private String getPrefPort(){
+		return prefs.get(PREF_PORT, "143");
+	}
+	private String getPrefUser(){
+		return prefs.get(PREF_USER, "");
+	}
 	public TrayItem getTrayicon() {
 		return trayicon;
+	}
+
+	public EventNotification getWindowEventNotif() {
+		return windowEventNotif;
 	}
 
 	public void init() {
@@ -277,10 +369,10 @@ public class Application {
 			masterShell = new Shell(display);
 			LOG.debug("build login");
 			login = new Login(masterShell);
-			login.setUser(prefs.get(PREF_USER, ""));
-			login.setPassword(prefs.get(PREF_PASSWORD, ""));
-			login.setHost(prefs.get(PREF_HOST, ""));
-			login.setPort(prefs.get(PREF_PORT, "143"));
+			login.setUser(getPrefUser());
+			login.setPassword(getPrefPasswor());
+			login.setHost(getPrefHost());
+			login.setPort(getPrefPort());
 			LOG.debug("build notification event");
 			windowEventNotif = new EventNotification();
 			LOG.debug("end init application");
@@ -294,7 +386,7 @@ public class Application {
 	private boolean isParamValid() {
 		return prefs.getBoolean(PREF_VALID, false);
 	}
-
+	
 	private boolean param(boolean autoConnect) {
 		int reponse = Window.OK;
 		if (!isParamValid()) {
@@ -306,6 +398,7 @@ public class Application {
 		return reponse == Window.OK;
 	}
 
+
 	private void run() {
 
 		while (!masterShell.isDisposed()) {
@@ -314,90 +407,30 @@ public class Application {
 		}
 	}
 
-	private void buildManager() {
-		xmppManager = new XmppManager() {
-			@Override
-			protected void onDisconnect() {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			protected void onAuthFail(Exception e) {
-				// TODO Auto-generated method stub
-			}
-		};
-		calendar = new CalendarManager() {
-			@Override
-			protected void onAuthFail(Exception e) {
-				setParamInvalid();
-				disconnect();
-			}
-
-			@Override
-			protected void onDisconnect() {
-				if (isParamValid()) {
-					Notification.getInstance().trayChange(
-							TRAY_TYPE.DISCONNECTED);
-				} else {
-					Notification.getInstance().trayChange(TRAY_TYPE.ERROR);
-
-				}
-
-			}
-		};
-		mailManager = new JavaPushMailAccountsManager() {
-
-			@Override
-			public void handleError(JavaPushMailAccount acc, Exception ex) {
-				LOG.error("[ERROR] on mail manager -> disconnect ", ex);
-				if (ex instanceof AuthenticationFailedException) {
-					disconnect();
-					setParamInvalid();
-					MessageDialog.openError(masterShell, "Erreur",
-							"Imposible to connect; Check user password ");
-				}
-			}
-
-			@Override
-			public void onModelChange() {
-				LOG.debug("mod�le change");
-			}
-
-			@Override
-			public void onStateChange() {
-				if (this.isConnected()) {
-					UnreadMailState.check();
-				} else {
-					Notification.getInstance().trayChange(
-							TRAY_TYPE.DISCONNECTED);
-				}
-			}
-		};
-
-		prober = new NetworkProber() {
-
-			@Override
-			public void onNetworkChange(boolean status) {
-				if (!status && connected) {
-					if (getSessionFailureCount() >= 2
-							|| getPingFailureCount() >= 2) {
-						LOG.info("msut be connction vut seem be off");
-						connected = false;
-						connect(true);
-					}
-				}
-			}
-
-			@Override
-			public void missedBeat() {
-				// TODO Auto-generated method stub
-				connect(true);
-			}
-		};
+	private void setParamInvalid() {
+		// set flag of session state to invalid
+		prefs.putBoolean(PREF_VALID, false);
 	}
 
-	private void startIm(String user, String password, String host) {
-		xmppManager.start(user, password, host);
+	private void setParamValid() {
+		prefs.putBoolean(PREF_VALID, true);
+	}
+
+
+	private void setPrefHost(String host){
+		prefs.put(PREF_HOST, host);
+	}
+
+	private void setPrefPassword(String password){
+		prefs.put(PREF_PASSWORD, password);
+	}
+
+	private void setPrefPort(String port){
+		prefs.put(PREF_PORT, port);
+	}
+
+	private void setPrefUser(String user){
+		prefs.put(PREF_USER, user);
 	}
 
 	private boolean startCalendarScan(String user, String password, String host) {
@@ -408,17 +441,21 @@ public class Application {
 		return started;
 	}
 
-	private void startScanMail(String user, String password, String host,
-			int port) {
-
-		mailManager.setAccount("BMNotifierScanMail", host, port, false, user,
-				password);
-
+	private void startIm(String user, String password, String host) {
+		xmppManager.start(user, password, host);
 	}
 
 	private boolean startnetworkProber(String host, int port) {
 
 		return prober.start(host, port);
+
+	}
+
+	private void startScanMail(String user, String password, String host,
+			int port) {
+
+		mailManager.setAccount("BMNotifierScanMail", host, port, false, user,
+				password);
 
 	}
 

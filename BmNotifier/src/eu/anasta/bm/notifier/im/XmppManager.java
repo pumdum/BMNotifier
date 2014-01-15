@@ -12,57 +12,79 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.jaxmpp.j2se.Jaxmpp;
 import eu.anasta.bm.notifier.ui.Notification;
 
-
 public abstract class XmppManager {
-	boolean chatOpen=false;
-	
+	boolean chatOpen = false;
+
+	boolean connected = false;
+
 	public XmppManager() {
 		// TODO Auto-generated constructor stub
 	}
 
 	private Jaxmpp jaxmpp;
-	public void start(final String user, String password, String host) {
-	       try{
-	    	   jaxmpp = new Jaxmpp();
-	               jaxmpp.getModulesManager().getModule( PresenceModule.class ).addListener( PresenceModule.ContactChangedPresence, new Listener<PresenceModule.PresenceEvent>() {
-	       
-	                   @Override
-	                   public void handleEvent( PresenceEvent be ) throws JaxmppException {
-	                	   boolean im = be.getJid().getResource().startsWith("Blue-Mind-IM_");
-	                	   boolean isMe = user.equals( be.getJid().getBareJid().toString());
-	                	   boolean offline =StanzaType.unavailable.equals(be.getPresence().getType() );
-	                	   if (im && isMe){
-	                		   chatOpen = !offline;
-	                	   }
-	                   }
-	               } );
-	               jaxmpp.addListener(MessageModule.MessageReceived,
-	    				new Listener<MessageModule.MessageEvent>() {
 
-	    					@Override
-	    					public void handleEvent(MessageEvent be)
-	    							throws JaxmppException {
-	    						if (!chatOpen)
-	    						if (be.getChat() != null) {
-	    							ErrorCondition err = be.getMessage()
-	    									.getErrorCondition();
-	    							if (err == null) {
-	    								Notification.getInstance()
-										.xmppNotification(be.getMessage());
-	    							}
-	    						}
-	    					}
-	    				});
-	               jaxmpp.getConnectionConfiguration().setServer(host);
-	               jaxmpp.getConnectionConfiguration().setUserJID(BareJID.bareJIDInstance( user ));
-	               jaxmpp.getConnectionConfiguration().setUserPassword(password);
-	               jaxmpp.login();
-		}catch (Exception e){
+	public void start(final String user, String password, String host) {
+		try {
+			jaxmpp = new Jaxmpp();
+			jaxmpp.getModulesManager()
+					.getModule(PresenceModule.class)
+					.addListener(PresenceModule.ContactChangedPresence,
+							new Listener<PresenceModule.PresenceEvent>() {
+
+								@Override
+								public void handleEvent(PresenceEvent be)
+										throws JaxmppException {
+									boolean im = be.getJid().getResource()
+											.startsWith("Blue-Mind-IM_");
+									boolean isMe = user.equals(be.getJid()
+											.getBareJid().toString());
+									boolean offline = StanzaType.unavailable
+											.equals(be.getPresence().getType());
+									if (im && isMe) {
+										chatOpen = !offline;
+									}
+								}
+							});
+			jaxmpp.addListener(MessageModule.MessageReceived,
+					new Listener<MessageModule.MessageEvent>() {
+
+						@Override
+						public void handleEvent(MessageEvent be)
+								throws JaxmppException {
+							if (!chatOpen)
+								if (be.getChat() != null) {
+									ErrorCondition err = be.getMessage()
+											.getErrorCondition();
+									if (err == null) {
+										Notification.getInstance()
+												.xmppNotification(
+														be.getMessage());
+									}
+								}
+						}
+					});
+			jaxmpp.getConnectionConfiguration().setServer(host);
+			jaxmpp.getConnectionConfiguration().setUserJID(
+					BareJID.bareJIDInstance(user));
+			jaxmpp.getConnectionConfiguration().setUserPassword(password);
+			jaxmpp.login();
+			connected = true;
+		} catch (Exception e) {
+			onAuthFail(e);
 			e.printStackTrace();
 		}
 	}
 
 	private void close() {
+		try {
+			if (connected) {
+				jaxmpp.disconnect();
+				onDisconnect();
+			}
+		} catch (JaxmppException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	protected abstract void onDisconnect();

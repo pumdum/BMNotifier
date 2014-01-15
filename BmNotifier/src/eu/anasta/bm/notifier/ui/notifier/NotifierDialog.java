@@ -68,9 +68,9 @@ public class NotifierDialog {
      * 
      * @param title
      * @param message
-     * @param type
+     * @param image
      */
-    public static void notify(String title, String message, NotificationType type, final String openLink) {
+    public static void notify(String title, String message, Image image, final String openLink) {
     	final Shell _shell;
     	_shell = new Shell(Display.getDefault().getActiveShell(), SWT.ON_TOP | SWT.TOOL | SWT.NO_FOCUS | SWT.NO_TRIM);
         _shell.setLayout(new FillLayout());
@@ -151,7 +151,7 @@ public class NotifierDialog {
 
         CLabel imgLabel = new CLabel(inner, SWT.NONE);
         imgLabel.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING | GridData.HORIZONTAL_ALIGN_BEGINNING));
-        imgLabel.setImage(type.getImage());
+        imgLabel.setImage(image);
 
 
 
