@@ -31,7 +31,6 @@ public abstract class JavaPushMailAccountsManager {
 			@Override
 			public void onConnect() {
 				connected = true;
-				// UnreadMailState.check();
 				onStateChange();
 			}
 
@@ -43,7 +42,6 @@ public abstract class JavaPushMailAccountsManager {
 		};
 		account.setCredentials(username, password);
 		notifiers = new JavaPushMailNotifier(account);
-		onModelChange();
 		startMailDaemon(account);
 		return account;
 	}
@@ -67,6 +65,10 @@ public abstract class JavaPushMailAccountsManager {
 	public boolean isConnected() {
 		return connected;
 	}
+	
+	public boolean isReady(){
+		return notifiers!=null && account!=null;
+	}
 
 	private void startMailDaemon(JavaPushMailAccount mail) {
 		Thread t = new Thread(mail);
@@ -76,7 +78,6 @@ public abstract class JavaPushMailAccountsManager {
 
 	public abstract void handleError(JavaPushMailAccount acc, Exception ex);
 
-	public abstract void onModelChange();
 
 	public abstract void onStateChange();
 }

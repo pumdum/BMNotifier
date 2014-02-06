@@ -137,6 +137,9 @@ public abstract class CalendarManager {
 		}
 	}
 
+	public boolean isRunning(){
+		return plannerNextReminder!=null;
+	}
 	public String getVersion() {
 		return version;
 	}

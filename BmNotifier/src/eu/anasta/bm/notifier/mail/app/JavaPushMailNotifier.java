@@ -1,6 +1,5 @@
 package eu.anasta.bm.notifier.mail.app;
 
-import javax.mail.Flags.Flag;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.event.MessageChangedEvent;
@@ -8,7 +7,10 @@ import javax.mail.event.MessageChangedListener;
 import javax.mail.event.MessageCountEvent;
 import javax.mail.event.MessageCountListener;
 
+import org.apache.log4j.Logger;
+
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
+import eu.anasta.bm.notifier.mail.UnreadMailState;
 import eu.anasta.bm.notifier.ui.Notification;
 
 /**
@@ -19,6 +21,7 @@ import eu.anasta.bm.notifier.ui.Notification;
  */
 public class JavaPushMailNotifier {
 
+	private static Logger LOG = Logger.getLogger(JavaPushMailNotifier.class); 
 	private MessageCountListener messageCountListener;
 	private MessageChangedListener messageChangedListener;
 	private JavaPushMailAccount mail;
@@ -40,11 +43,7 @@ public class JavaPushMailNotifier {
 
 			public void messagesAdded(final MessageCountEvent e) {
 				try {
-					if (!isReminderMail(e.getMessages()[0])){
 						showNotification(e.getMessages()[0]);
-					}else{
-						e.getMessages()[0].setFlag(Flag.SEEN, true);
-					}
 				} catch (MessagingException ex) {
 					ex.printStackTrace();
 				} catch (Exception ex) {
@@ -64,29 +63,15 @@ public class JavaPushMailNotifier {
 
 			public void messageChanged(MessageChangedEvent e) {
 				try {
-					if (e.getMessageChangeType()==MessageChangedEvent.FLAGS_CHANGED) {
-//						printHeader(e.getMessage());
-					}
+					LOG.debug("one message change check unread mail");
+					UnreadMailState.check();
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 			}
 		};
-	}
-	private boolean isReminderMail(Message m){
-		try {
-			String[] returnpath = m.getHeader("Return-Path");
-			String[] subject = m.getHeader("Subject");
-			if (returnpath!=null && subject!=null && returnpath.length==1 && subject.length==1 && returnpath[0].startsWith("<null@") && subject[0].startsWith("Rappel:")){
-				return true;
-			}
-		} catch (MessagingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
-	}
 	
+	}
 
 	private void showNotification(Message message) throws MessagingException {
 		Notification.getInstance().mailNotification(message, mail);

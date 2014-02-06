@@ -108,22 +108,26 @@ public abstract class JavaPushMailAccount implements Runnable {
 	}
 
 	public void disconnect() {
-		if (!connected && server == null && !server.isConnected())
-			return;
-
 		Thread t = new Thread(new Runnable() {
 
 			public void run() {
 				try {
 					closeFolder();
-					server.close();
-					// prober.stop();
-					connected = false;
-					onDisconnect();
 				} catch (Exception e) {
 					LOG.error(e);
 					onError(e);
 				}
+				try {
+					if (!server.isConnected()){
+						server.close();
+					}
+				} catch (Exception e) {
+					LOG.error(e);
+					onError(e);
+				}
+
+				connected = false;
+				onDisconnect();
 			}
 		});
 		t.setName("close conection mail");
@@ -143,27 +147,6 @@ public abstract class JavaPushMailAccount implements Runnable {
 	}
 
 	private void initConnection() {
-		/*
-		 * prober = new NetworkProber(this) {
-		 * 
-		 * @Override public void onNetworkChange(boolean status) { if (status !=
-		 * connected) { // if two states do not match, // something has truly
-		 * changed! if (status && !connected) { // if connection up, but not //
-		 * connected...
-		 * LOG.info("status seem be ok but connection down try to connect");
-		 * connect(); } else if (!status && connected) { // if previously //
-		 * connected, but link // down... then just // disconnect... if
-		 * (getSessionFailureCount() >= 2 || getPingFailureCount() >= 2) {
-		 * LOG.info("msut be connction vut seem be off"); connected = false;
-		 * onDisconnect(); connect(); } } } else { // if link (either session or
-		 * net connection) and // connection down, something gone wrong... if
-		 * (!isSessionValid() && getNetConnectivity()) { // need to // make //
-		 * sure // that // session // is // down, // but // link // is // up...
-		 * LOG.info("connection off try reconnect"); connect(); } } }
-		 * 
-		 * @Override public void missedBeat() { // missed beat, because of going
-		 * to // sleep, probably?! connected = false; } };
-		 */
 		Properties props = System.getProperties();
 
 		// enable to throw out everything...
@@ -224,17 +207,14 @@ public abstract class JavaPushMailAccount implements Runnable {
 		};
 		LOG.debug("start periodic renew push");
 		timer = new Timer("Pushperiodique-" + accountName, true);
-		timer.scheduleAtFixedRate(task, 0, STOPPUSHTIMER);
+		// on le demarre pas trop vite sinon sa marche pas toujours (probablement que IMAP a pas le temp de bien ouvir le dossier)
+		timer.scheduleAtFixedRate(task, 1000, STOPPUSHTIMER);
 	}
 
 	private void closeFolder() throws MessagingException {
 		LOG.debug("close folder");
-		if (folder == null || !folder.isOpen())
-			return;
-
 		stopPeriodiquePush();
 		removeAllListenersFromFolder();
-		// folder.setSubscribed(false);
 		if (folder == null || !folder.isOpen())
 			return;
 		folder.close(false);
@@ -254,16 +234,14 @@ public abstract class JavaPushMailAccount implements Runnable {
 			public void run() {
 				try {
 					LOG.debug("start use push");
-					UnreadMailState.check();
+					//					UnreadMailState.check();
 					folder.idle(false);
 					// TODO log ex
 				} catch (FolderClosedException e) {
 					LOG.error(e);
 					messageChangedListener = null;
 					messageCountListener = null;
-					// if (prober.getNetConnectivity()) {
 					selectFolder("");
-					// }
 				} catch (javax.mail.StoreClosedException e) {
 					LOG.error(e);
 				} catch (MessagingException e) {
@@ -277,18 +255,12 @@ public abstract class JavaPushMailAccount implements Runnable {
 		};
 		pushThread = new Thread(r, "Push-" + accountName);
 		pushThread.setDaemon(true);
-
 		pushThread.start();
 
 	}
 
 	public void stopPeriodiquePush() {
 		LOG.debug("stop periodic renew push");
-		// for (StackTraceElement trac :
-		// Thread.currentThread().getStackTrace()){
-		// LOG.debug(trac.toString());
-		//
-		// }
 		if (timer == null)
 			return;
 

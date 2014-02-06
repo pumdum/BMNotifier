@@ -46,6 +46,9 @@ public class ClientFormLogin {
 	}
 
 	public String login() {
+		if (!isReady()){
+			return null;
+		}
 		try {
 			HttpGet httpget = new HttpGet("https://" + host + "/");
 
@@ -151,8 +154,14 @@ public class ClientFormLogin {
 			return false;
 		}
 	}
+	public boolean isReady(){
+		return httpclient!=null ;
+	}
 
 	public void closeFormLogin() {
-		httpclient.getConnectionManager().shutdown();
+		if (isReady()){
+			httpclient.getConnectionManager().shutdown();
+			httpclient=null;
+		}
 	}
 }

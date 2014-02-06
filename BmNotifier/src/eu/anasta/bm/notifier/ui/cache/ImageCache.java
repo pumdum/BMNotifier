@@ -23,16 +23,17 @@ public class ImageCache {
     public static String LITLLE_BM ="16/bm.png";
     public static String LITLLE_ERROR ="16/error.png";
     public static String LITLLE_WARN ="16/warn.png";
-    public static String lITLLE_ONLINE ="16/online.png";
+    public static String LITLLE_TEMOIN_ONLINE ="16/bOnline.png";
     public static String lITLLE_OFFLINE ="16/offline.png";
     public static String lITLLE_AWAY ="16/away.png";
+    public static String LITLLE_USER_ONLINE="16/uOnline.png";
     
     public static int BM_STATUS_DISCONECT = 	00000001;
     public static int BM_STATUS_WARN = 	00000010;
     public static int MAIL_UNREAD = 	00000100;
-    public static int IM_ONLINE = 		00001000;
-    public static int IM_OFFLINE = 		00010000;
-    public static int IM_AWAY = 		00100000;
+    public static int IM_TEMOIN_ONLINE = 		00001000;
+    public static int IM_TEMOIN_OFFLINE = 		00010000;
+    public static int IM_TEMOIN_AWAY = 		00100000;
 
     // what path to get to the "icons" directory without actually including it
     private static final String           ICON_ROOT_PATH = "/";
@@ -74,13 +75,13 @@ public class ImageCache {
         	if ( (selection & BM_STATUS_WARN) != 0){
         		gc.drawImage(getImage(LITLLE_WARN), 0, 0);	
         	}
-        	if ( (selection & IM_ONLINE) != 0){
-        		gc.drawImage(getImage(lITLLE_ONLINE), 8, 9);	
+        	if ( (selection & IM_TEMOIN_ONLINE) != 0){
+        		gc.drawImage(getImage(LITLLE_TEMOIN_ONLINE), 8, 9);	
         	}
-        	if ( (selection & IM_OFFLINE) != 0){
+        	if ( (selection & IM_TEMOIN_OFFLINE) != 0){
         		gc.drawImage(getImage(lITLLE_OFFLINE), 8, 9);	
         	}
-        	if ( (selection & IM_AWAY) != 0){
+        	if ( (selection & IM_TEMOIN_AWAY) != 0){
         		gc.drawImage(getImage(lITLLE_AWAY),	8, 9);	
         	}
             _ImageMap.put(selection, image);
