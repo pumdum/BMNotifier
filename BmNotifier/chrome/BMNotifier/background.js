@@ -6,31 +6,25 @@ chrome.browserAction.onClicked.addListener(function() {
 		findHost(false);
 	}
 	if (Hostknow) {
-		chrome.cookies.get({"url":getBmUrl(),"name":"BMHPS"},cookiesBMHPS);
 		chrome.tabs.create({'url': getBmUrl()});
 	}
 });
 
-function getBmUrl() {
-  return "https://"+host;
+function onAlarm(alarm) {
+	updatecookiesBMHPS();
 }
 
-function cookiesBMHPS(cookie){
-	console.debug(cookie);
-	if (cookie==null || cookie.value==""){
-	// session expired or not created make new cookies
-		console.debug("Cookies BM not present");
-		if (Hostknow) setCookiesBMHPS(getHPS());
-		else console.debug("but server unknow");
-	}else{
-		// already a cookies 
-		//
-		console.debug("cookies BM present");
-	}	
+function getBmUrl() {
+  return "https://"+host+"/";
+}
+
+function updatecookiesBMHPS(){
+	if (Hostknow) setCookiesBMHPS(getHPS());
+	else console.debug("but server unknow");
 }
 
 function setCookiesBMHPS(hps){
-	chrome.cookies.set({"url":getBmUrl(),"name":"BMHPS","value":hps,"path":"/","domain":host},function(cookie) {console.debug(cookie)});	
+	chrome.cookies.set({"url":getBmUrl(),"name":"BMHPS","value":hps,"path":"/"},function(cookie) {console.debug(cookie)});	
 }
 
 function getHPS(){
@@ -86,8 +80,8 @@ function findHost(async){
 	xhr.send();
 }
 updateIcon();
-findHost(true);
-//chrome.cookies.get({"url":getBmUrl(),"name":"BMHPS"},cookiesBMHPS);
+findHost(false);
+updatecookiesBMHPS();
 chrome.cookies.onChanged.addListener(function(changeInfo) {
 if (changeInfo.removed && changeInfo.cookie.name=="BMHPS" && changeInfo.cause!="overwrite") {
 	if (!Hostknow){
@@ -98,3 +92,5 @@ if (changeInfo.removed && changeInfo.cookie.name=="BMHPS" && changeInfo.cause!="
   }
 }
 });
+chrome.alarms.create('refresh', {periodInMinutes: 5});
+chrome.alarms.onAlarm.addListener(onAlarm);
