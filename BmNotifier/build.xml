@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="BmNotifier">
+	<property environment="env" />
+	<property name="ECLIPSE_HOME" value="../../../../../Program Files/eclipse-kepler" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.6" />
+	<property name="source" value="1.6" />
+	<path id="BmNotifier.classpath">
+		<pathelement location="bin" />
+		<pathelement location="lib/commons-lang3.jar" />
+		<pathelement location="lib/commons-math3.jar" />
+		<pathelement location="lib/images.jar" />
+		<pathelement location="lib/jface.jar" />
+		<pathelement location="lib/jface.text.jar" />
+		<pathelement location="lib/log4j.jar" />
+		<pathelement location="lib/nebula.cdatetime.jar" />
+		<pathelement location="lib/nebula.pshelf.jar" />
+		<pathelement location="lib/org.eclipse.core.commands.jar" />
+		<pathelement location="lib/org.eclipse.equinox.common.jar" />
+		<pathelement location="lib/org.eclipse.osgi.jar" />
+		<pathelement location="lib/sound.jar" />
+		<pathelement location="lib/swt-win64.jar" />
+		<pathelement location="lib/mail.jar" />
+		<pathelement location="lib/async-http-client-1.7.4.jar" />
+		<pathelement location="lib/jcl-over-slf4j-1.6.4.jar" />
+		<pathelement location="lib/logback-classic-1.0.0.jar" />
+		<pathelement location="lib/logback-core-1.0.0.jar" />
+		<pathelement location="lib/net.bluemind.core.client_1.0.0.b5930.jar" />
+		<pathelement location="lib/net.bluemind.core.common_1.0.0.b5930.jar" />
+		<pathelement location="lib/net.bluemind.locator.client_2.3.0.jar" />
+		<pathelement location="lib/netty-3.4.6.Final.jar" />
+		<pathelement location="lib/slf4j-api-1.6.4.jar" />
+		<pathelement location="lib/nebula.widgets.cdatetime.jar" />
+		<pathelement location="lib/nebula.cwt.jar" />
+		<pathelement location="lib/commons-codec-1.6.jar" />
+		<pathelement location="lib/commons-logging-1.1.1.jar" />
+		<pathelement location="lib/fluent-hc-4.2.2.jar" />
+		<pathelement location="lib/httpclient-4.2.2.jar" />
+		<pathelement location="lib/httpclient-cache-4.2.2.jar" />
+		<pathelement location="lib/httpcore-4.2.2.jar" />
+		<pathelement location="lib/httpmime-4.2.2.jar" />
+		<pathelement location="lib/servlet-api-3.0.jar" />
+		<pathelement location="lib/jetty-server-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-util-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-http-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-io-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-ajp-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-annotations-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-client-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-continuation-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-deploy-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-jmx-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-jndi-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-overlay-deployer-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-plus-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-policy-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-rewrite-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-security-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-servlet-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-servlets-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-webapp-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-websocket-8.1.11.v20130520.jar" />
+		<pathelement location="lib/jetty-xml-8.1.11.v20130520.jar" />
+		<pathelement location="lib/smack.jar" />
+		<pathelement location="lib/smackx-jingle.jar" />
+		<pathelement location="lib/jaxmpp-core-2.0.0-beta1.jar" />
+		<pathelement location="lib/jaxmpp-j2se-2.0.0-beta1.jar" />
+		<pathelement location="lib/tigase-extras-1.0.0.jar" />
+		<pathelement location="lib/tigase-utils-3.3.11.jar" />
+		<pathelement location="lib/tigase-xmltools-3.3.7.jar" />
+	</path>
+	<target name="init">
+		<mkdir dir="bin" />
+		<copy includeemptydirs="false" todir="bin">
+			<fileset dir="src">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target depends="build" name="jar">
+        <jar destfile="C:/Users/n.dumont.ANASTA/Desktop/BmNotifier.jar">
+            <manifest>
+                <attribute name="Main-Class" value="eu.anasta.bm.notifier.BmNotifierLoader"/>
+                <attribute name="Rsrc-Main-Class" value="eu.anasta.bm.notifier.ui.Application"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ commons-lang3.jar commons-math3.jar images.jar jface.jar jface.text.jar log4j.jar nebula.cdatetime.jar nebula.pshelf.jar org.eclipse.core.commands.jar org.eclipse.equinox.common.jar org.eclipse.osgi.jar sound.jar swt.jar mail.jar async-http-client-1.7.4.jar jcl-over-slf4j-1.6.4.jar logback-classic-1.0.0.jar logback-core-1.0.0.jar net.bluemind.core.client_1.0.0.b5930.jar net.bluemind.core.common_1.0.0.b5930.jar net.bluemind.locator.client_2.3.0.jar netty-3.4.6.Final.jar slf4j-api-1.6.4.jar nebula.widgets.cdatetime.jar nebula.cwt.jar commons-codec-1.6.jar commons-logging-1.1.1.jar fluent-hc-4.2.2.jar httpclient-4.2.2.jar httpclient-cache-4.2.2.jar httpcore-4.2.2.jar httpmime-4.2.2.jar servlet-api-3.0.jar jetty-server-8.1.11.v20130520.jar jetty-util-8.1.11.v20130520.jar jetty-http-8.1.11.v20130520.jar jetty-io-8.1.11.v20130520.jar jetty-ajp-8.1.11.v20130520.jar jetty-annotations-8.1.11.v20130520.jar jetty-client-8.1.11.v20130520.jar jetty-continuation-8.1.11.v20130520.jar jetty-deploy-8.1.11.v20130520.jar jetty-jmx-8.1.11.v20130520.jar jetty-jndi-8.1.11.v20130520.jar jetty-overlay-deployer-8.1.11.v20130520.jar jetty-plus-8.1.11.v20130520.jar jetty-policy-8.1.11.v20130520.jar jetty-rewrite-8.1.11.v20130520.jar jetty-security-8.1.11.v20130520.jar jetty-servlet-8.1.11.v20130520.jar jetty-servlets-8.1.11.v20130520.jar jetty-webapp-8.1.11.v20130520.jar jetty-websocket-8.1.11.v20130520.jar jetty-xml-8.1.11.v20130520.jar smack.jar smackx.jar smackx-jingle.jar jaxmpp-core-2.0.0-beta1.jar jaxmpp-j2se-2.0.0-beta1.jar tigase-extras-1.0.0.jar tigase-utils-3.3.11.jar tigase-xmltools-3.3.7.jar jar-in-jar-loader.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="bin"/>
+            <zipfileset dir="lib" includes="commons-lang3.jar"/>
+            <zipfileset dir="lib" includes="commons-math3.jar"/>
+            <zipfileset dir="lib" includes="images.jar"/>
+            <zipfileset dir="lib" includes="jface.jar"/>
+            <zipfileset dir="lib" includes="jface.text.jar"/>
+            <zipfileset dir="lib" includes="log4j.jar"/>
+            <zipfileset dir="lib" includes="nebula.cdatetime.jar"/>
+            <zipfileset dir="lib" includes="nebula.pshelf.jar"/>
+            <zipfileset dir="lib" includes="org.eclipse.core.commands.jar"/>
+            <zipfileset dir="lib" includes="org.eclipse.equinox.common.jar"/>
+            <zipfileset dir="lib" includes="org.eclipse.osgi.jar"/>
+            <zipfileset dir="lib" includes="sound.jar"/>
+            <zipfileset dir="lib" includes="swt-win64.jar"/>
+        	<zipfileset dir="lib" includes="swt-win32.jar"/>
+            <zipfileset dir="lib" includes="swt-linux64.jar"/>
+        	<zipfileset dir="lib" includes="swt-linux32.jar"/>
+            <zipfileset dir="lib" includes="swt-osx64.jar"/>
+        	<zipfileset dir="lib" includes="swt-osx32.jar"/>
+            <zipfileset dir="lib" includes="mail.jar"/>
+            <zipfileset dir="lib" includes="async-http-client-1.7.4.jar"/>
+            <zipfileset dir="lib" includes="jcl-over-slf4j-1.6.4.jar"/>
+            <zipfileset dir="lib" includes="logback-classic-1.0.0.jar"/>
+            <zipfileset dir="lib" includes="logback-core-1.0.0.jar"/>
+            <zipfileset dir="lib" includes="net.bluemind.core.client_1.0.0.b5930.jar"/>
+            <zipfileset dir="lib" includes="net.bluemind.core.common_1.0.0.b5930.jar"/>
+            <zipfileset dir="lib" includes="net.bluemind.locator.client_2.3.0.jar"/>
+            <zipfileset dir="lib" includes="netty-3.4.6.Final.jar"/>
+            <zipfileset dir="lib" includes="slf4j-api-1.6.4.jar"/>
+            <zipfileset dir="lib" includes="nebula.widgets.cdatetime.jar"/>
+            <zipfileset dir="lib" includes="nebula.cwt.jar"/>
+            <zipfileset dir="lib" includes="commons-codec-1.6.jar"/>
+            <zipfileset dir="lib" includes="commons-logging-1.1.1.jar"/>
+            <zipfileset dir="lib" includes="fluent-hc-4.2.2.jar"/>
+            <zipfileset dir="lib" includes="httpclient-4.2.2.jar"/>
+            <zipfileset dir="lib" includes="httpclient-cache-4.2.2.jar"/>
+            <zipfileset dir="lib" includes="httpcore-4.2.2.jar"/>
+            <zipfileset dir="lib" includes="httpmime-4.2.2.jar"/>
+            <zipfileset dir="lib" includes="servlet-api-3.0.jar"/>
+            <zipfileset dir="lib" includes="jetty-server-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-util-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-http-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-io-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-ajp-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-annotations-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-client-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-continuation-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-deploy-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-jmx-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-jndi-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-overlay-deployer-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-plus-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-policy-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-rewrite-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-security-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-servlet-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-servlets-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-webapp-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-websocket-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="jetty-xml-8.1.11.v20130520.jar"/>
+            <zipfileset dir="lib" includes="smack.jar"/>
+            <zipfileset dir="lib" includes="smackx.jar"/>
+            <zipfileset dir="lib" includes="smackx-jingle.jar"/>
+            <zipfileset dir="lib" includes="jaxmpp-core-2.0.0-beta1.jar"/>
+            <zipfileset dir="lib" includes="jaxmpp-j2se-2.0.0-beta1.jar"/>
+            <zipfileset dir="lib" includes="tigase-extras-1.0.0.jar"/>
+            <zipfileset dir="lib" includes="tigase-utils-3.3.11.jar"/>
+            <zipfileset dir="lib" includes="tigase-xmltools-3.3.7.jar"/>
+            <zipfileset dir="lib" includes="jar-in-jar-loader.jar"/>
+        </jar>
+	</target>
+
+	<target name="clean">
+		<delete dir="bin" />
+	</target>
+	<target depends="clean" name="cleanall" />
+	<target depends="build-project" name="build" />
+	<target depends="init" name="build-project">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+			<src path="src" />
+			<classpath refid="BmNotifier.classpath" />
+		</javac>
+	</target>
+	<target name="Start">
+		<java classname="eu.anasta.bm.notifier.ui.Application" failonerror="true" fork="yes">
+			<classpath refid="BmNotifier.classpath" />
+		</java>
+	</target>
+</project>

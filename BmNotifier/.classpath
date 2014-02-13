@@ -14,7 +14,6 @@
 	<classpathentry kind="lib" path="lib/org.eclipse.equinox.common.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.osgi.jar"/>
 	<classpathentry kind="lib" path="lib/sound.jar"/>
-	<classpathentry kind="lib" path="lib/swt.jar"/>
 	<classpathentry kind="lib" path="lib/mail.jar"/>
 	<classpathentry kind="lib" path="lib/async-http-client-1.7.4.jar"/>
 	<classpathentry kind="lib" path="lib/jcl-over-slf4j-1.6.4.jar"/>
@@ -63,5 +62,7 @@
 	<classpathentry kind="lib" path="lib/tigase-extras-1.0.0.jar"/>
 	<classpathentry kind="lib" path="lib/tigase-utils-3.3.11.jar"/>
 	<classpathentry kind="lib" path="lib/tigase-xmltools-3.3.7.jar"/>
+	<classpathentry kind="lib" path="lib/jar-in-jar-loader.jar"/>
+	<classpathentry kind="lib" path="lib/swt-win64.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

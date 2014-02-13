@@ -45,8 +45,10 @@ public class JavaPushMailNotifier {
 				try {
 						showNotification(e.getMessages()[0]);
 				} catch (MessagingException ex) {
+					LOG.error(ex);
 					ex.printStackTrace();
 				} catch (Exception ex) {
+					LOG.error(ex);
 					ex.printStackTrace();
 				}
 			}
@@ -55,6 +57,7 @@ public class JavaPushMailNotifier {
 				try {
 					//TODO make something ? 
 				} catch (Exception ex) {
+					LOG.error(ex);
 					ex.printStackTrace();
 				}
 			}
@@ -64,8 +67,9 @@ public class JavaPushMailNotifier {
 			public void messageChanged(MessageChangedEvent e) {
 				try {
 					LOG.debug("one message change check unread mail");
-					UnreadMailState.check();
+//					UnreadMailState.check();
 				} catch (Exception ex) {
+					LOG.error(ex);
 					ex.printStackTrace();
 				}
 			}

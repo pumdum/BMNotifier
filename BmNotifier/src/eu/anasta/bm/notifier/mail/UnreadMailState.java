@@ -3,6 +3,8 @@ package eu.anasta.bm.notifier.mail;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
+import org.apache.log4j.Logger;
+
 import eu.anasta.bm.notifier.ui.Application;
 import eu.anasta.bm.notifier.ui.Notification;
 import eu.anasta.bm.notifier.ui.Notification.TRAY_TYPE;
@@ -14,7 +16,7 @@ import eu.anasta.bm.notifier.ui.Notification.TRAY_TYPE;
  */
 public class UnreadMailState {
 
-
+	private static final Logger LOG = Logger.getLogger(UnreadMailState.class);
 
 
 	public static void check() {
@@ -38,6 +40,7 @@ public class UnreadMailState {
 				Notification.getInstance().setTooltip("BM Notifier");
 			}
 		} catch (MessagingException e) {
+			LOG.error(e);
 			e.printStackTrace();
 		}
 	}

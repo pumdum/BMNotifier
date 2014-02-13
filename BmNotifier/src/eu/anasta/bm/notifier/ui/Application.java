@@ -21,7 +21,6 @@ import org.eclipse.swt.widgets.TrayItem;
 
 import eu.anasta.bm.notifier.calendar.CalendarManager;
 import eu.anasta.bm.notifier.im.XmppManager;
-import eu.anasta.bm.notifier.im.XmppManager.Presence;
 import eu.anasta.bm.notifier.login.ClientFormLogin;
 import eu.anasta.bm.notifier.mail.JavaPushMailAccount;
 import eu.anasta.bm.notifier.mail.UnreadMailState;
@@ -93,7 +92,7 @@ public class Application {
 	/** The trayicon. */
 	private TrayItem trayBMicon;
 
-	private TrayItem trayIMicon;
+//	private TrayItem trayIMicon;
 
 	/** The window event notif. */
 	private EventNotification windowEventNotif;
@@ -199,8 +198,11 @@ public class Application {
 				} else {
 					if (connected) {
 						LOG.debug("[CONNECT] [OFF]");
+						LOG.debug("il y a eu une erreur alors que j'etait connecter -> je stop tout les planner le prochain timer les relancera");
 						connected = false;
 						stopPlanner();
+					}else{
+						LOG.debug("il y a eu une erreur dans le mailAccount mais je ne suis pas connecter je fait rien, ça ne doit pas arriver");
 					}
 				}
 			}
@@ -416,38 +418,40 @@ public class Application {
 				}
 			});
 			trayBMicon.setImage(imageBM);
-			trayIMicon = new TrayItem(tray, SWT.NONE);// lITLLE_USER_ONLINE
-			trayIMicon.setImage(ImageCache
-					.getImage(ImageCache.LITLLE_USER_ONLINE));
-			final Menu menuIM = new Menu(masterShell, SWT.POP_UP);
-			mi = new MenuItem(menuIM, SWT.PUSH);
-			mi.setText("En ligne");
-			mi.setImage(ImageCache.getImage(ImageCache.LITLLE_TEMOIN_ONLINE));
-			mi.addListener(SWT.Selection, new Listener() {
-				public void handleEvent(Event event) {
-				}
-			});
-			mi = new MenuItem(menuIM, SWT.PUSH);
-			mi.setText("Absent");
-			mi.setImage(ImageCache.getImage(ImageCache.lITLLE_AWAY));
-			mi.addListener(SWT.Selection, new Listener() {
-				public void handleEvent(Event event) {
-				}
-			});
-			mi = new MenuItem(menuIM, SWT.PUSH);
-			mi.setText("Hors ligne");
-			mi.setImage(ImageCache.getImage(ImageCache.lITLLE_OFFLINE));
-			mi.addListener(SWT.Selection, new Listener() {
-				public void handleEvent(Event event) {
-					xmppManager.changePresence(Presence.dnd);
-				}
-
-			});
-			trayIMicon.addListener(SWT.MenuDetect, new Listener() {
-				public void handleEvent(Event event) {
-					menuIM.setVisible(true);
-				}
-			});
+//			trayIMicon = new TrayItem(tray, SWT.NONE);// lITLLE_USER_ONLINE
+//			trayIMicon.setImage(ImageCache
+//					.getImage(ImageCache.LITLLE_USER_ONLINE));
+//			final Menu menuIM = new Menu(masterShell, SWT.POP_UP);
+//			mi = new MenuItem(menuIM, SWT.PUSH);
+//			mi.setText("En ligne");
+//			mi.setImage(ImageCache.getImage(ImageCache.LITLLE_TEMOIN_ONLINE));
+//			mi.addListener(SWT.Selection, new Listener() {
+//				public void handleEvent(Event event) {
+//					xmppManager.changePresence(Presence.online);
+//				}
+//			});
+//			mi = new MenuItem(menuIM, SWT.PUSH);
+//			mi.setText("Absent");
+//			mi.setImage(ImageCache.getImage(ImageCache.lITLLE_AWAY));
+//			mi.addListener(SWT.Selection, new Listener() {
+//				public void handleEvent(Event event) {
+//					xmppManager.changePresence(Presence.away);
+//				}
+//			});
+//			mi = new MenuItem(menuIM, SWT.PUSH);
+//			mi.setText("Hors ligne");
+//			mi.setImage(ImageCache.getImage(ImageCache.lITLLE_OFFLINE));
+//			mi.addListener(SWT.Selection, new Listener() {
+//				public void handleEvent(Event event) {
+//					xmppManager.changePresence(Presence.dnd);
+//				}
+//
+//			});
+//			trayIMicon.addListener(SWT.MenuDetect, new Listener() {
+//				public void handleEvent(Event event) {
+//					menuIM.setVisible(true);
+//				}
+//			});
 
 		}
 
@@ -459,7 +463,7 @@ public class Application {
 	private void destroyTray() {
 		// disconnect and dispose()
 		LOG.debug("detroy tray");
-		disconnect();
+//		disconnect();
 		ImageCache.dispose();
 		display.dispose();
 	}

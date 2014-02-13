@@ -185,6 +185,7 @@ public abstract class JavaPushMailAccount implements Runnable {
 			onError(ex);
 		} catch (IllegalStateException ex) {
 			LOG.error(ex);
+			onError(ex);
 		}
 	}
 
@@ -207,7 +208,7 @@ public abstract class JavaPushMailAccount implements Runnable {
 		};
 		LOG.debug("start periodic renew push");
 		timer = new Timer("Pushperiodique-" + accountName, true);
-		// on le demarre pas trop vite sinon sa marche pas toujours (probablement que IMAP a pas le temp de bien ouvir le dossier)
+		// on le demarre pas trop vite sinon sa marche pas toujours (probablement que IMAP a pas le temp de bien ouvrir le dossier)
 		timer.scheduleAtFixedRate(task, 1000, STOPPUSHTIMER);
 	}
 
@@ -234,9 +235,10 @@ public abstract class JavaPushMailAccount implements Runnable {
 			public void run() {
 				try {
 					LOG.debug("start use push");
-					//					UnreadMailState.check();
+					LOG.debug("check unread");
+					UnreadMailState.check();
+					LOG.debug("idle");
 					folder.idle(false);
-					// TODO log ex
 				} catch (FolderClosedException e) {
 					LOG.error(e);
 					messageChangedListener = null;
